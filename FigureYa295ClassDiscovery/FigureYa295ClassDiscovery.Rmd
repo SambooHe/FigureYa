@@ -4,7 +4,15 @@ params:
   author: "Xiaofan Lu; Yasi Zhang"  
   reviewer: "Ying Ge"
   date: "2025-05-20"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+    code_folding: show
 ---
 
 **Author(s)**: `r params$author`  
