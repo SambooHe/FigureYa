@@ -440,7 +440,6 @@ The output PDF file is a vector image and can be opened in software such as Illu
 - **Enhanced Error Handling**: Added annotation data variation checks, automatically adding minimal random perturbations when data lacks variation to prevent heatmap plotting errors
 - **GSVA Parameterization Improvements**: Using the new `gsvaParam` API instead of direct `gsva` function calls, adopting modern GSVA workflow to improve computational efficiency
 
-
 ## Session Info
 
 ```{r}
