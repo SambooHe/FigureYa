@@ -295,6 +295,24 @@ TRUE
 scale. =
 FALSE
 )
+head
+(pca.results
+$
+rotation[,
+1
+:
+3
+])
+#查看前3个主成分的基因载荷 #view the gene loadings of the first 3 principal components
+head
+(pca.results
+$
+x[,
+1
+:
+3
+])
+#查看前3个主成分的样本坐标 #view the sample coordinates of the first 3 principal components
 #定义足够多的颜色，用于展示分组
 #define enough colors for display groupings
 mycol
@@ -457,11 +475,12 @@ height =
 7.1.2
 箭头版 Arrowhead
 version
-用箭头标出对 PCA 贡献最大的 N 个（这里以 3
+用箭头标出对 PCA贡献（载荷² × 对应特征值）最大的 N 个（这里以 3
 为例）基因，把抽象的降维结果转化为可解释的生物学故事。
-Mark the top N (3 in this example) genes with arrows that contribute
-the most to PCA, transforming abstract dimensionality reduction results
-into interpretable biological stories.
+Use arrows to mark the top N (3 in this example) genes that
+contribute to PCA (loading² × corresponding eigenvalue), transforming
+abstract dimensionality reduction results into interpretable biological
+stories.
 topN
 <-
 3
