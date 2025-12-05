@@ -63,7 +63,9 @@ PCoA（Principal Coordinates
 Analysis，主坐标分析）是一种降维方法，常用于生态学和微生物组学中，用于可视化样本之间的距离或相似性关系。它基于距离矩阵，通过将高维数据投影到低维空间（通常是二维或三维）来展示样本之间的关系。
 PCA从原始数据直接降维，PCoA从距离矩阵降维
 PCA能告诉你”为什么”（载荷），PCoA只能告诉你”样本的相对位置”。
-当距离=欧氏距离时，PCA=PCoA。
+原文使用Bray-Curtis dissimilarity
+matrix针对非负矩阵，这里表达谱有负值，所以采用普通的欧氏距离。当距离=欧氏距离时，PCA=PCoA。所以，算出来的其实还是
+PCA。
 这种可视化方法也适用于 PCA/UMAP 等。
 PCoA (Principal Coordinates Analysis) is a dimensionality reduction
 method commonly used in ecology and microbiome studies to visualize the
@@ -75,7 +77,11 @@ PCA reduces the dimensionality directly from the original data, while
 PCoA reduces the dimensionality from the distance matrix.
 PCA can tell you “why” (loadings), while PCoA can only tell you “the
 relative position of samples.”
-When the distance = Euclidean distance, PCA = PCoA.
+The original method is Bray-Curtis dissimilarity matrix (available
+for non-negative matrices), where the expression spectrum has a negative
+value, so the ordinary Euclidean distance is used. When the distance =
+Euclidean distance, PCA = PCoA. So the calculated result is actually
+PCA.
 The visualization method is also applicable to PCA/UMAP, etc.
 4
 环境设置 Environment
@@ -616,7 +622,7 @@ F)
 # Drawing
 pdf
 (
-"PoCA.pdf"
+"PCoA.pdf"
 ,
 width =
 5
