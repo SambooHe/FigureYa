@@ -50,7 +50,7 @@ PCA从原始数据直接降维，PCoA从距离矩阵降维
 
 PCA能告诉你"为什么"（载荷），PCoA只能告诉你"样本的相对位置"。
 
-当距离=欧氏距离时，PCA=PCoA。
+原文使用Bray-Curtis dissimilarity matrix针对非负矩阵，这里表达谱有负值，所以采用普通的欧氏距离。当距离=欧氏距离时，PCA=PCoA。所以，算出来的其实还是 PCA。
 
 这种可视化方法也适用于 PCA/UMAP 等。
 
@@ -60,7 +60,7 @@ PCA reduces the dimensionality directly from the original data, while PCoA reduc
 
 PCA can tell you "why" (loadings), while PCoA can only tell you "the relative position of samples."
 
-When the distance = Euclidean distance, PCA = PCoA.
+The original method is Bray-Curtis dissimilarity matrix (available for non-negative matrices), where the expression spectrum has a negative value, so the ordinary Euclidean distance is used. When the distance = Euclidean distance, PCA = PCoA. So the calculated result is actually PCA.
 
 The visualization method is also applicable to PCA/UMAP, etc.
 
@@ -224,7 +224,7 @@ write.csv(plotinfo2, "output_av_sd.csv", quote = F)
 
 # 绘图
 # Drawing
-pdf("PoCA.pdf", width = 5,height = 5)
+pdf("PCoA.pdf", width = 5,height = 5)
 par(bty="o", mgp = c(1.9,.33,0), mar=c(3.1,3.1,2.1,2.1)+.1, las=1, tcl=-.25)
 # 根据上面的基础图像，调整横轴纵轴的宽度，生成一张空白图像
 # Based on the base image above, adjust the width of the horizontal and vertical axes to generate a blank image
@@ -311,7 +311,7 @@ text(plotinfo2$avgx,
 invisible(dev.off())
 ```
 
-![](PoCA.pdf)
+![](PCoA.pdf)
 
 ## PERMANOVA test (2-way adonis)
 
