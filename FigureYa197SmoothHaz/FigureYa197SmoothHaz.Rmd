@@ -235,7 +235,7 @@ summary(res.cox)
 muhaz包自带plot.muhaz，这里我选择ggplot2来画图，分三步进行：
 The muhaz package comes with plot.muhaz, here I choose ggplot2 to draw the plot, in three steps:
 
-### 1. 先画风险曲线 Draw the risk curve first
+### 先画风险曲线 Draw the risk curve first
 ```{r, fig.width=3, fig.height=3}
 # 自定义颜色
 # Custom colors
@@ -269,7 +269,7 @@ This makes a diagram like the example text.
 
 Here's an upgraded version given by the author: plus the risk table
 
-### 2. 画风险表 Draw a risk table
+### 画风险表 Draw a risk table
 
 这里我们使用survminer包的ggsurvplot构建风险表
 
@@ -298,7 +298,7 @@ p2 <- ggsurv$table +
 p2
 ```
 
-### 3. 组图 Combine plots
+### 组图 Combine plots
 
 ```{r}
 # 组图
@@ -345,7 +345,7 @@ The kern parameter in the muhaz function specifies the kernel type. As per the p
 
 The image above is taken from[基迪奥生物](https://mp.weixin.qq.com/s/Kkc7kNUaUl0nU0Y8EQoMbA)
 
-[带宽 bandwidth](https://en.wikipedia.org/wiki/Kernel_density_estimation)is a free parameter that adjusts the smoothness of the kernel density estimation curve, and the larger the bandwidth of the core, the smoother the curve
+[bandwidth](https://en.wikipedia.org/wiki/Kernel_density_estimation)is a free parameter that adjusts the smoothness of the kernel density estimation curve, and the larger the bandwidth of the core, the smoother the curve
 
 ## Session Info
 ```{r}
