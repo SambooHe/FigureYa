@@ -1,9 +1,15 @@
 FigureYa197SmoothHaz
+Code
+Show All Code
+Hide All Code
 FigureYa197SmoothHaz
 Author(s)
 : Jiawei Shi
+Reviewer(s)
+: Ying Ge, Hui Huang
 Date
-: 2025-09-22
+: 2025-12-23
+1
 Academic Citation
 If you use this code in your work or research, we kindly request that
 you cite our publication:
@@ -11,23 +17,24 @@ Xiaofan Lu, et al. (2025). FigureYa: A Standardized Visualization
 Framework for Enhancing Biomedical Data Interpretation and Research
 Efficiency. iMetaMed.
 https://doi.org/10.1002/imm3.70005
-需求描述
-Description of the requirements
+2
+需求描述 Requirement
+Description
 复现平滑化的风险函数曲线（B） Reproducing the smoothed risk function
 curve (B)
-出自
-https://pubmed.ncbi.nlm.nih.gov/32386405/
-from
+From
 https://pubmed.ncbi.nlm.nih.gov/32386405/
 Figure 2: (A) Recurrence-free survival curves according to the
 presence of MIP component. (B) Smoothed hazard estimates for the
 presence of MIP component.
 图B在例文中多次出现。 Figure B appears several times in the
 example.
-应用场景
+3
+应用场景 Application
+Scenarios
 该图本质上就是一种核密度图。关于核密度图的基础知识可参考底部“附”。
 例文应用风险曲线探索手术切除的肺腺癌微乳头这种组织学亚型术后不同时间内的复发风险。
-我们用TCGA最新的pancancer临床信息做为输入数据，你可以顺利画出自己感兴趣的癌症的核密度图，展示某一特征随时间的变化。
+我们用TCGA的pancancer临床信息做为输入数据，你可以顺利画出自己感兴趣的癌症的核密度图，展示某一特征随时间的变化。
 这种图在更多文章中的应用：
 Science.
 2020;eabd2161.
@@ -41,15 +48,14 @@ JAMA Oncol.
 本次复现的图参考
 Neuro Oncol. 2015
 Jul;17(7):999-1006.
-Application Scenarios
 This plot is fundamentally a kernel density plot. For foundational
 concepts of kernel density estimation, refer to the Appendix.
 Example Use Case: The original study employed risk curves (a
 specialized kernel density visualization) to explore recurrence risks
 over time in the micropapillary histological subtype of resected lung
 adenocarcinoma.
-Workflow Adaptation: Using the latest TCGA pan-cancer clinical data
-as input, you can generate kernel density plots for any cancer type of
+Workflow Adaptation: Using the TCGA pan-cancer clinical data as
+input, you can generate kernel density plots for any cancer type of
 interest to visualize temporal changes in specific biological or
 clinical features.
 Additional Literature Applications: For extended implementations of
@@ -66,19 +72,69 @@ JAMA Oncol.
 Diagram reference for this reproduction:
 Neuro Oncol. 2015
 Jul;17(7):999-1006.
-环境设置
-Environment settings
-source("install_dependencies.R")
-library(survival)
-library(survminer)# 生存分析 # Survival analysis
-library(openxlsx) # 读取数据 # Read the data
-library(muhaz)    # 风险评估 # risk assessment
-library(dplyr)    # 数据清洗 # Data cleansing
-library(ggplot2)  # 绘图 # plot
-library(cowplot)  # 拼图 # jigsaw puzzle
-Sys.setenv(LANGUAGE = "en") #显示英文报错信息 # error messages are displayed in English
-options(stringsAsFactors = FALSE) #禁止chr转成factor # It is forbidden to convert chr into factor
+4
+环境设置 Environment
+settings
+source
+(
+"install_dependencies.R"
+)
+library
+(survival)
+# 生存分析 # Survival analysis
+library
+(survminer)
+# 生存分析 # Survival analysis
+library
+(openxlsx)
+# 读取数据 # Read the data
+library
+(muhaz)
+# 风险评估 # risk assessment
+library
+(dplyr)
+# 数据清洗 # Data cleansing
+library
+(ggplot2)
+# 绘图 # plot
+library
+(cowplot)
+# 拼图 # jigsaw puzzle
+# 设置字体
+# Set the font
+# 施普林格·自然杂志社图片文字要求8号Helvetica or Arial，（https://www.nature.com/documents/aj-artworkguidelines.pdf）
+# Springer Nature Magazine Picture text request No. 8 Helvetica or Arial,（https://www.nature.com/documents/aj-artworkguidelines.pdf）
+# 对于HTML输出，使用系统字体，不需要extrafont
+# For HTML output, use system fonts, no extrafont needed
+font_available
+<-
+FALSE
+default_font
+<-
+"Helvetica"
+cat
+(
+"使用系统默认字体:"
+, default_font,
+" (HTML输出)
+\n
+"
+)
+Sys.setenv
+(
+LANGUAGE =
+"en"
+)
+#显示英文报错信息 # error messages are displayed in English
+options
+(
+stringsAsFactors =
+FALSE
+)
+#禁止chr转成factor # It is forbidden to convert chr into factor
+5
 输入文件的获得
+Obtaining Input Files
 如果你的数据已整理成
 easy_input.csv
 的格式，就跳过这步，直接进入“构建muhaz对象”。
@@ -88,10 +144,8 @@ Cell.
 的
 补充材料
 后面将以性别gender作为分组举例子，实际分析时，把gender替换为你感兴趣的特征对应在panclin里的列名。或者把你经过其他分析获得的分类信息作为一列添加进去。
-Obtaining Input Files
 If your data is already formatted as easy_input.csv, skip this step
 and proceed directly to the Build muhaz Object section.
-Data Source
 input.xlsx: Contains the latest TCGA pan-cancer clinical data sourced
 from the Supplementary Materials of the publication:
 Cell.
@@ -104,40 +158,119 @@ corresponding to the list name in the panclin. Or add the classification
 information you’ve obtained through other analyses as a column.
 # 加载TCGA pancancer临床数据
 # Load TCGA pancancer clinical data
-panclin <- read.xlsx(xlsxFile = "input.xlsx",sheet = 1)
-dim(panclin)
-panclin[1,] # 查看有哪些列 # See what columns there are
+panclin
+<-
+read.xlsx
+(
+xlsxFile =
+"input.xlsx"
+,
+sheet =
+1
+)
+dim
+(panclin)
+panclin[
+1
+,]
+# 查看有哪些列 # See what columns there are
 # 选取感兴趣的癌症
 # Select the cancer of interest
 #panclin <- panclin[panclin$type %in% "ACC", ]
-
 # 按例图的72个月调整生存数据
 # Survival data were adjusted for 72 months as shown in the example figure
-clin <- panclin %>%
-  # 选取想要的列
-  # Select the columns you want
-  select(.,DFI, DFI.time, 
-         gender) %>% # 后面将以性别作为分组，选取gender列，可以替换为其他感兴趣的列名 # The gender column will be grouped later, and the gender column can be replaced with other column names of interest
-  
-  # 删除没有生存结局和时间的case # Delete cases that don't have a survival ending and time
-  filter(!(is.na(.$DFI) | is.na(.$DFI.time))) %>%
-  
-  mutate(time_month = round(DFI.time/30,digits = 1)) %>%
-  mutate(survevent = ifelse(DFI == 1 & time_month <= 72, 1, 0), 
-         survmonth = ifelse(time_month <=  72, time_month, 72)) 
-dim(clin)
+clin
+<-
+panclin
+%>%
+# 选取想要的列
+# Select the columns you want
+select
+(.,DFI, DFI.time,
+gender)
+%>%
+# 后面将以性别作为分组，选取gender列，可以替换为其他感兴趣的列名 # The gender column will be grouped later, and the gender column can be replaced with other column names of interest
+# 删除没有生存结局和时间的case # Delete cases that don't have a survival ending and time
+filter
+(
+!
+(
+is.na
+(.
+$
+DFI)
+|
+is.na
+(.
+$
+DFI.time)))
+%>%
+mutate
+(
+time_month =
+round
+(DFI.time
+/
+30
+,
+digits =
+1
+))
+%>%
+mutate
+(
+survevent =
+ifelse
+(DFI
+==
+1
+&
+time_month
+<=
+72
+,
+1
+,
+0
+),
+survmonth =
+ifelse
+(time_month
+<=
+72
+, time_month,
+72
+))
+dim
+(clin)
 # 保存到文件，便于套用
 # Save to a file for easy application
-write.csv(clin, "easy_input.csv", quote = F, row.names = F)
-输入文件
-Input files
+write.csv
+(clin,
+"easy_input.csv"
+,
+quote =
+F,
+row.names =
+F)
+6
+输入文件 Input
+files
 easy_input.csv，包含生存信息，和一列分组信息（此处为gender）。
 easy_input.csv，Contains survival information, and a column of grouping
 information (in this case, gender)
-clin <- read.csv("easy_input.csv")
-head(clin)
-构建muhaz对象
-Build the muhaz object
+clin
+<-
+read.csv
+(
+"easy_input.csv"
+)
+head
+(clin)
+7
+构建muhaz对象 Build the
+muhaz object
+7.1
 muhaz函数的参数设置
 Parameter settings for the muhaz function
 times，生存时间向量
@@ -162,192 +295,479 @@ b.cor，边界效应校正类型，“b”=“both”(表示校正双边的边�
 n.min.grid,n.est.grid=101，前者默认51，后者默认101
 kern=“epanechnikov”
 设置核函数，使用首字母即可，默认epanechnikov
-Parameter Descriptions for Kernel Density Estimation in Survival
-Analysis
--times: Vector of survival times. -delta: Vector of event status
-indicators (0 = censored, 1 = event occurred). -subset: Subset of
-observations to include. If unspecified, all observations are used.
--min.time, max.time: Define the time interval for analysis. -bw.pilot:
--Pilot bandwidth value minimizing the Mean Integrated Squared Error
-(MISE). -Default calculation follows the method by Mueller & Wang
-(1994). -Formula: bw.pilot = (max.time - min.time) / (8 * nz^0.2), where
-nz is the number of uncensored observations. -bw.grid: Bandwidth grid
-for MISE minimization. Default: 21 equally spaced values between [0.2 *
--bw.pilot, 20 * bw.pilot]. -bw.smooth: Local smoothing bandwidth.
-Ignored if bw.method = “global”. Default: 5 * bw.pilot. -bw.method:
-Algorithm for bandwidth selection:
-“global”: Global bandwidth.
-“local” (default): Locally adaptive bandwidth.
-“knn”: k-nearest neighbor-based bandwidth. (Abbreviations accepted,
-e.g., “g”, “l”, “k”).
--b.cor: Boundary correction type:
-“b” (both): Corrects left and right boundaries.
-“n” (default): No correction.
-“l”: Left boundary only.
-“r”: Right boundary only.
--n.min.grid: Minimum grid size. Default: 51.
-n.est.grid: Estimation grid size. Default: 101.
--kern: Kernel function. Options:
-“epanechnikov” (default).
-Other kernels may be specified by abbreviation (e.g., “e” for
+times: Vector of survival times.
+delta: Vector of event status indicators (0 = censored, 1 = event
+occurred).
+subset: Subset of observations to include. If unspecified, all
+observations are used.
+min.time, max.time: Define the time interval for
+analysis.
+bw.pilot:
+Pilot bandwidth value minimizing the Mean Integrated Squared Error
+(MISE).
+Default calculation follows the method by Mueller & Wang
+(1994).
+Formula: bw.pilot = (max.time - min.time) / (8 * nz^0.2), where nz
+is the number of uncensored observations.
+bw.grid: Bandwidth grid for MISE minimization. Default: 21
+equally spaced values between [0.2 * bw.pilot, 20 * bw.pilot].
+bw.smooth: Local smoothing bandwidth. Ignored if bw.method =
+“global”. Default: 5 * bw.pilot.
+bw.method: Algorithm for bandwidth selection:“global”: Global
+bandwidth.”local” (default): Locally adaptive bandwidth.”knn”: k-nearest
+neighbor-based bandwidth.(Abbreviations accepted, e.g., “g”, “l”,
+“k”).
+b.cor: Boundary correction type:“b” (both): Corrects left and
+right boundaries.”n” (default): No correction.”l”: Left boundary
+only.”r”: Right boundary only.
+n.min.grid: Minimum grid size. Default: 51. n.est.grid:
+Estimation grid size. Default: 101.
+kern: Kernel function. Options: “epanechnikov” (default). Other
+kernels may be specified by abbreviation (e.g., “e” for
 Epanechnikov).
-构建muhaz对象
-Build the muhaz object
-smoothhazp <- clin %>% 
-  group_by(gender) %>% #根据自己的需要修改分组列名 # Modify the group column names as needed
-  do(haz = muhaz(times = .$survmonth,delta = .$survevent,
-                 min.time = min(.$survmonth[.$survevent==1]),
-                 max.time = max(.$survmonth[.$survevent==1]),
-                 bw.grid = 7,bw.method = "g",b.cor = "b")) %>%
-  do(data.frame(Hazard = .$haz$haz.est, 
-                Months = .$haz$est.grid, 
-                Subgroup = .$gender))
-验证分析结果
-Verify the results of the analysis
+7.2
+构建muhaz对象 Build
+the muhaz object
+smoothhazp
+<-
+clin
+%>%
+group_by
+(gender)
+%>%
+#根据自己的需要修改分组列名 # Modify the group column names as needed
+do
+(
+haz =
+muhaz
+(
+times =
+.
+$
+survmonth,
+delta =
+.
+$
+survevent,
+min.time =
+min
+(.
+$
+survmonth[.
+$
+survevent
+==
+1
+]),
+max.time =
+max
+(.
+$
+survmonth[.
+$
+survevent
+==
+1
+]),
+bw.grid =
+7
+,
+bw.method =
+"g"
+,
+b.cor =
+"b"
+))
+%>%
+do
+(
+data.frame
+(
+Hazard =
+.
+$
+haz
+$
+haz.est,
+Months =
+.
+$
+haz
+$
+est.grid,
+Subgroup =
+.
+$
+gender))
+7.3
+验证分析结果 Verify
+the results of the analysis
 # 检验一下
 # Check it out
-maxHaz <- smoothhazp %>% group_by(Subgroup) %>%
-    summarise(stratMax=max(Hazard))
-print(maxHaz)
+maxHaz
+<-
+smoothhazp
+%>%
+group_by
+(Subgroup)
+%>%
+summarise
+(
+stratMax=
+max
+(Hazard))
+print
+(maxHaz)
 # 估算HR
 # Estimate HR
-maxHaz$stratMax[2]/maxHaz$stratMax[1]
-构建cox回归模型，对比一下
-Build a COX regression model and compare it
+maxHaz
+$
+stratMax[
+2
+]
+/
+maxHaz
+$
+stratMax[
+1
+]
+7.4
+构建cox回归模型，对比一下 Build a COX regression model and compare
+it
 两者算出来的HR近乎相等。 The HR calculated by the two is almost
 equal.
-res.cox <- coxph(Surv(survmonth, survevent) ~ gender, data =  clin)
-summary(res.cox)
-开始画图
-Start plotting
+res.cox
+<-
+coxph
+(
+Surv
+(survmonth, survevent)
+~
+gender,
+data =
+clin)
+summary
+(res.cox)
+8
+开始画图 Start
+plotting
 muhaz包自带plot.muhaz，这里我选择ggplot2来画图，分三步进行： The
 muhaz package comes with plot.muhaz, here I choose ggplot2 to draw the
 plot, in three steps:
-1. 先画风险曲线
-1. Draw the risk curve first
-# 设置字体
-# Set the font
-# 施普林格·自然杂志社图片文字要求8号Helvetica or Arial，（https://www.nature.com/documents/aj-artworkguidelines.pdf）
-# Springer Nature Magazine Picture text request No. 8 Helvetica or Arial,（https://www.nature.com/documents/aj-artworkguidelines.pdf）
-
-# 检查并安装必要的包
-if (!require(extrafont)) {
-  cat("extrafont 包未安装，尝试安装...\n")
-  # 尝试安装 extrafont
-  if (!require(remotes)) install.packages("remotes")
-  tryCatch({
-    install.packages("extrafont")
-  }, error = function(e) {
-    remotes::install_github("wch/extrafont")
-  })
-}
-# 加载字体包（如果可用）
-font_available <- require(extrafont, quietly = TRUE)
-
-if (font_available) {
-  # 尝试加载字体
-  tryCatch({
-    # 检查是否已有字体数据
-    if (length(extrafont::fonts()) == 0) {
-      # 导入字体
-      extrafont::font_import(prompt = FALSE)
-    }
-    extrafont::loadfonts(device = "pdf", quiet = TRUE)
-    cat("字体系统初始化成功\n")
-  }, error = function(e) {
-    cat("字体初始化失败:", e$message, "\n")
-    font_available <- FALSE
-  })
-}
-
-# 如果没有字体支持，使用默认设置
-if (!font_available) {
-  cat("使用默认字体设置\n")
-  # 设置默认字体族
-  if (.Platform$OS.type == "windows") {
-    default_font <- "sans"
-  } else {
-    default_font <- "Helvetica"
-  }
-} else {
-  default_font <- "Arial"
-}
+8.1
+1. 先画风险曲线 Draw
+the risk curve first
 # 自定义颜色
 # Custom colors
-orange <- "#EB292A"
-blue <- "#2271B4"
-
-p1 <- ggplot(smoothhazp, aes(x=Months, y=Hazard, colour= factor(Subgroup,labels = c("Male","Female")))) +
-  geom_line() + ggtitle("Kernel-smoothing hazard function plot")+
-  scale_color_manual(values = c(blue, orange)) +
-  theme_classic() +
-  theme(plot.title = element_text(hjust=-0.1, size=8, vjust=0.2, face = "bold"),
-        axis.text = element_text(size=8, colour="black"),
-        axis.title = element_text(size=8, colour="black"),
-        legend.title = element_blank(),
-        legend.position = c(0.8,0.9)) +
-  scale_x_continuous(name = "", breaks = seq(0,72,12))
-
+orange
+<-
+"#EB292A"
+blue
+<-
+"#2271B4"
+p1
+<-
+ggplot
+(smoothhazp,
+aes
+(
+x=
+Months,
+y=
+Hazard,
+colour=
+factor
+(Subgroup,
+labels =
+c
+(
+"Male"
+,
+"Female"
+))))
++
+geom_line
+()
++
+ggtitle
+(
+"Kernel-smoothing hazard function plot"
+)
++
+scale_color_manual
+(
+values =
+c
+(blue, orange))
++
+theme_classic
+()
++
+theme
+(
+plot.title =
+element_text
+(
+hjust=
+-
+0.1
+,
+size=
+8
+,
+vjust=
+0.2
+,
+face =
+"bold"
+),
+axis.text =
+element_text
+(
+size=
+8
+,
+colour=
+"black"
+),
+axis.title =
+element_text
+(
+size=
+8
+,
+colour=
+"black"
+),
+legend.title =
+element_blank
+(),
+legend.position =
+c
+(
+0.8
+,
+0.9
+))
++
+scale_x_continuous
+(
+name =
+""
+,
+breaks =
+seq
+(
+0
+,
+72
+,
+12
+))
 # 如果字体可用，应用字体设置
-if (font_available) {
-  p1 <- p1 + theme(text = element_text(family = default_font))
+if
+(font_available) {
+p1
+<-
+p1
++
+theme
+(
+text =
+element_text
+(
+family =
+default_font))
 }
-
 p1
 这样就画出了例文那样的图。
 下面是作者给出的升级版：加上风险表
 This makes a diagram like the example text.
 Here’s an upgraded version given by the author: plus the risk
 table
-2. 画风险表
-2. Draw a risk table
+8.2
+2. 画风险表 Draw a
+risk table
 这里我们使用survminer包的ggsurvplot构建风险表
 Here we use the ggsurvplot of the survminer package to build the risk
 table
-fit <- survfit(Surv(survmonth, survevent) ~ gender, data = clin)
-
-ggsurv <- ggsurvplot(fit, data = clin, risk.table = TRUE, 
-                     legend.title = "",                 # 设置图例标题 # Set the legend title
-                     legend.labs = c("Male", "Female"), # 指定图例分组标签 # Specify the legend grouping label
-                     palette = c(blue, orange),         #自定义颜色 # Custom colors
-
-                     xlab = "Months",fontsize=2.5,      # 调节风险表字体大小 # Adjust the font size of the risk table
-                     xlim = c(0,72), break.x.by = 12,
-                     # 设置risk table xy轴及标签格式 # Set the risk table xy axis and label format
-                     tables.theme = theme_survminer(base_size = 8,
-                                                    #base_family = "Arial",
-                                                    font.main = c(8, "plain", "black"),
-                                                    font.x = c(8, "plain", "black"),
-                                                    font.y = c(8, "plain", "black"),
-                                                    font.tickslab = c(8, "plain", "black")))
-p2 <- ggsurv$table + 
-  theme(legend.position = "none") + labs(title = "") # 删除风险表的title # Delete the title of the risk table
+fit
+<-
+survfit
+(
+Surv
+(survmonth, survevent)
+~
+gender,
+data =
+clin)
+ggsurv
+<-
+ggsurvplot
+(fit,
+data =
+clin,
+risk.table =
+TRUE
+,
+legend.title =
+""
+,
+# 设置图例标题 # Set the legend title
+legend.labs =
+c
+(
+"Male"
+,
+"Female"
+),
+# 指定图例分组标签 # Specify the legend grouping label
+palette =
+c
+(blue, orange),
+#自定义颜色 # Custom colors
+xlab =
+"Months"
+,
+fontsize=
+2.5
+,
+# 调节风险表字体大小 # Adjust the font size of the risk table
+xlim =
+c
+(
+0
+,
+72
+),
+break.x.by =
+12
+,
+# 设置risk table xy轴及标签格式 # Set the risk table xy axis and label format
+tables.theme =
+theme_survminer
+(
+base_size =
+8
+,
+#base_family = "Arial",
+font.main =
+c
+(
+8
+,
+"plain"
+,
+"black"
+),
+font.x =
+c
+(
+8
+,
+"plain"
+,
+"black"
+),
+font.y =
+c
+(
+8
+,
+"plain"
+,
+"black"
+),
+font.tickslab =
+c
+(
+8
+,
+"plain"
+,
+"black"
+)))
 p2
-3. 组图
+<-
+ggsurv
+$
+table
++
+theme
+(
+legend.position =
+"none"
+)
++
+labs
+(
+title =
+""
+)
+# 删除风险表的title # Delete the title of the risk table
+p2
+8.3
+3. 组图 Combine
+plots
 # 组图
 # merge plots
-plot_grid(p1,p2,ncol=1,
-          rel_heights = c(1,0.4),align = 'v')
+plot_grid
+(p1,p2,
+ncol=
+1
+,
+rel_heights =
+c
+(
+1
+,
+0.4
+),
+align =
+'v'
+)
 # 保存为pdf文件，是矢量图，可以用Illustrator等工具继续编辑
 # Saved as a pdf file, it is a vector illustration that can be continued with tools such as Illustrator
-pdf("smoothHaz.pdf", width = 3, height = 4)
-plot_grid(p1,p2,ncol=1,
-          rel_heights = c(1,0.4),align = 'v')
-dev.off()
+pdf
+(
+"smoothHaz.pdf"
+,
+width =
+3
+,
+height =
+4
+)
+plot_grid
+(p1,p2,
+ncol=
+1
+,
+rel_heights =
+c
+(
+1
+,
+0.4
+),
+align =
+'v'
+)
+dev.off
+()
 # 或者保存为tiff
 # Or save as a tiff
 #ggsave(filename = "smoothHaz.tiff",width = 8,height = 8,units = 'cm',dpi = 300,compression='lzw')
-
 # 或者导入ppt继续编辑
 # Or import PPT to continue editing
 #export::graph2ppt(file = "smoothHaz.pptx",width = 3,height = 4)
-附
+9
+附 Appendix
 核密度估计
 ：一种非参数估计方法,根据已知的抽样数据推算总体概率分布的过程。
 核Kernel
 ，表示核函数，常见的核函数如高斯函数（正态分布）。
 muhaz包muhaz函数内的一个参数kern，其根据作者的用户手册提供设置选项，包括如下几种
-Appendix
 Kernel Density Estimation (KDE): A non-parametric method to estimate
 the probability density function of a population based on observed
 sample data.(
@@ -373,4 +793,7 @@ bandwidth
 is a free parameter that adjusts the smoothness of the
 kernel density estimation curve, and the larger the bandwidth of the
 core, the smoother the curve
-sessionInfo()
+10
+Session Info
+sessionInfo
+()
