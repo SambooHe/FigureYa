@@ -455,8 +455,8 @@ muhaz包自带plot.muhaz，这里我选择ggplot2来画图，分三步进行： 
 muhaz package comes with plot.muhaz, here I choose ggplot2 to draw the
 plot, in three steps:
 8.1
-1. 先画风险曲线 Draw
-the risk curve first
+先画风险曲线 Draw the
+risk curve first
 # 自定义颜色
 # Custom colors
 orange
@@ -586,8 +586,8 @@ This makes a diagram like the example text.
 Here’s an upgraded version given by the author: plus the risk
 table
 8.2
-2. 画风险表 Draw a
-risk table
+画风险表 Draw a risk
+table
 这里我们使用survminer包的ggsurvplot构建风险表
 Here we use the ggsurvplot of the survminer package to build the risk
 table
@@ -707,7 +707,7 @@ title =
 # 删除风险表的title # Delete the title of the risk table
 p2
 8.3
-3. 组图 Combine
+组图 Combine
 plots
 # 组图
 # merge plots
@@ -788,11 +788,11 @@ bandwidth
 是一个自由参数，可以调节核密度估计曲线的平滑度，核的带宽越大曲线越平滑
 The image above is taken from
 基迪奥生物
-带宽
 bandwidth
-is a free parameter that adjusts the smoothness of the
-kernel density estimation curve, and the larger the bandwidth of the
-core, the smoother the curve
+is
+a free parameter that adjusts the smoothness of the kernel density
+estimation curve, and the larger the bandwidth of the core, the smoother
+the curve
 10
 Session Info
 sessionInfo
