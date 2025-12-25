@@ -367,11 +367,6 @@ print(p)
 dev.off()
 ```
 
-## Session Info
-
-```{r}
-sessionInfo()
-```
 ## 关键更新要点 Key Updates Summary
 
 - **依赖包现代化**：替换旧的 `estimate` 包为新的 `tidyestimate` 包，使用 `filter_common_genes` 和 `estimate_score` 函数替代旧的 `filterCommonGenes` 和 `estimateScore`
@@ -379,13 +374,15 @@ sessionInfo()
 - **数据格式兼容性**：tidyestimate要求当 `tidy=FALSE` 时基因标识符在行名中，输出格式为tibble，需要适当的格式转换（移除了旧代码中不必要的列名处理）
 - **平台检测改进**：使用 `is_affymetrix` 参数替代 `platform` 参数，更清晰地指定数据平台类型（TRUE/FALSE 代替字符串）
 - **颜色函数现代化**：替换过时的 `NMF:::ccRamp` 函数为现代的 `colorRampPalette`，确保与新R版本的兼容性，避免对已废弃NMF包的依赖
-- **依赖安装脚本重构**：完全重写 `install_dependencies.R`，移除了estimate包的特殊安装逻辑（R-Forge安装、源码安装等），直接从CRAN安装tidyestimate
-- **代码注释更新**：在相关代码位置添加了中英文对照的注释，说明tidyestimate的使用方式和参数含义
 
 - **Dependency Modernization**: Replaced the deprecated `estimate` package with the modern `tidyestimate` package, using `filter_common_genes` and `estimate_score` functions instead of the old `filterCommonGenes` and `estimateScore`
 - **Function Name Updates**: tidyestimate uses modern R naming conventions (snake_case), different from the old estimate package's camelCase naming
 - **Data Format Compatibility**: tidyestimate requires gene identifiers in rownames when `tidy=FALSE`, and returns tibble format requiring appropriate conversions (removed unnecessary column name processing from old code)
 - **Platform Detection Improvements**: Uses `is_affymetrix` parameter (TRUE/FALSE) instead of `platform` parameter (string) for clearer data platform specification
 - **Color Function Modernization**: Replaced the outdated `NMF:::ccRamp` function with modern `colorRampPalette` to ensure compatibility with newer R versions and avoid dependency on deprecated NMF package
-- **Dependency Installation Script Refactored**: Completely rewrote `install_dependencies.R`, removed special installation logic for estimate package (R-Forge, source installation), now installs tidyestimate directly from CRAN
-- **Code Comments Updated**: Added bilingual (English/Chinese) comments at relevant code locations explaining tidyestimate usage and parameter meanings
+
+## Session Info
+
+```{r}
+sessionInfo()
+```
