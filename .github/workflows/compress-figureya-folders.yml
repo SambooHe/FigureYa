@@ -32,32 +32,27 @@ jobs:
           # Get list of all FigureYa folders
           ALL_FOLDERS=$(find . -maxdepth 1 -type d -name 'FigureYa*' | sed 's|^\./||' | sort)
 
-          # Check each folder for changes
+          # Check each folder for changes by comparing modification times
           CHANGED_FOLDERS=""
           for folder in $ALL_FOLDERS; do
-            # Check if folder exists in target
-            if [ ! -d "../target/${folder}" ]; then
-              echo "New folder detected: $folder"
-              CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
-            else
-              # Compare folder contents with target
-              # Use diff to check if folder contents have changed
-              if ! diff -rq "$folder" "../target/${folder}" > /dev/null 2>&1; then
-                # Also check if the zip file needs updating
-                # Extract modification times
-                SOURCE_TIME=$(find "$folder" -type f -printf '%T@\n' | sort -r | head -1)
-                if [ -f "../target/${folder}.zip" ]; then
-                  ZIP_TIME=$(stat -c '%Y' "../target/${folder}.zip" 2>/dev/null || echo 0)
-                  # Check if any file in source is newer than zip
-                  if [ "$SOURCE_TIME" -gt "$ZIP_TIME" ]; then
-                    echo "Changed folder detected: $folder"
-                    CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
-                  fi
-                else
-                  echo "Changed folder detected (no zip exists): $folder"
-                  CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
-                fi
+            # Get the latest modification time of any file in the source folder
+            SOURCE_TIME=$(find "$folder" -type f -printf '%T@\n' 2>/dev/null | sort -r | head -1 || echo "0")
+
+            # Check if corresponding zip file exists in target
+            if [ -f "../target/${folder}.zip" ]; then
+              # Get modification time of the zip file
+              ZIP_TIME=$(stat -c '%Y' "../target/${folder}.zip" 2>/dev/null || echo "0")
+
+              # Compare timestamps (convert SOURCE_TIME from decimal to integer)
+              SOURCE_TIME_INT=$(echo "$SOURCE_TIME" | cut -d. -f1)
+              if [ "$SOURCE_TIME_INT" -gt "$ZIP_TIME" ]; then
+                echo "Changed folder detected: $folder (source: $SOURCE_TIME_INT, zip: $ZIP_TIME)"
+                CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
               fi
+            else
+              # Zip file doesn't exist, need to create it
+              echo "New folder detected (no zip exists): $folder"
+              CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
             fi
           done
 
