@@ -29,41 +29,44 @@ jobs:
         run: |
           cd source
 
+          # Get the current HEAD commit hash of source repo
+          SOURCE_COMMIT=$(git rev-parse HEAD)
+
           # Get list of all FigureYa folders
           ALL_FOLDERS=$(find . -maxdepth 1 -type d -name 'FigureYa*' | sed 's|^\./||' | sort)
 
-          # Check each folder for changes by comparing git commit times
+          # Check each folder for changes by comparing with zip file contents
           CHANGED_FOLDERS=""
           for folder in $ALL_FOLDERS; do
-            # Get the latest git commit timestamp for any file within this folder
-            LATEST_FILE_TIME=$(find "$folder" -type f -exec git log -1 --format=%ct -- {} \; 2>/dev/null | sort -rn | head -n 1)
-
-            # Default to 0 if no files found
-            LATEST_FILE_TIME=${LATEST_FILE_TIME:-0}
-
-            echo "Checking $folder: latest source commit = $LATEST_FILE_TIME"
+            echo "Checking $folder"
 
             # Check if corresponding zip file exists in target
             if [ -f "../target/${folder}.zip" ]; then
-              # Get the git commit timestamp of the zip file in target repo
-              # Use --follow to track renames if any
-              ZIP_COMMIT_TIME=$(cd ../target && git log -1 --format=%ct --follow -- "${folder}.zip" 2>/dev/null)
+              # Extract and compare: create a temporary checksum of the folder
+              # Get a list of files and their checksums
+              FOLDER_CHECKSUM=$(find "$folder" -type f ! -name ".DS_Store" -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
 
-              # If git log returned empty, the file might not be committed yet
-              if [ -z "$ZIP_COMMIT_TIME" ]; then
-                echo "  Warning: ${folder}.zip has no git history, treating as new file"
-                ZIP_COMMIT_TIME=0
-              fi
+              # Extract the zip and get its checksum
+              TEMP_EXTRACT_DIR=$(mktemp -d)
+              unzip -q "../target/${folder}.zip" -d "$TEMP_EXTRACT_DIR" 2>/dev/null
 
-              echo "  Zip file git commit time = $ZIP_COMMIT_TIME"
+              if [ -d "$TEMP_EXTRACT_DIR/$folder" ]; then
+                ZIP_CHECKSUM=$(find "$TEMP_EXTRACT_DIR/$folder" -type f ! -name ".DS_Store" -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -d' ' -f1)
 
-              # Compare: if source has newer commits than zip, need to update
-              if [ "$LATEST_FILE_TIME" -gt "$ZIP_COMMIT_TIME" ]; then
-                echo "  ✓ Changed folder detected: $folder"
-                CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
+                # Compare checksums
+                if [ "$FOLDER_CHECKSUM" != "$ZIP_CHECKSUM" ]; then
+                  echo "  ✓ Changed folder detected: $folder"
+                  CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
+                else
+                  echo "  ✗ Folder unchanged: $folder"
+                fi
               else
-                echo "  ✗ Folder unchanged: $folder"
+                echo "  ✓ Changed (zip structure different): $folder"
+                CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
               fi
+
+              # Clean up
+              rm -rf "$TEMP_EXTRACT_DIR"
             else
               # Zip file doesn't exist, need to create it
               echo "  ✓ New folder (no zip exists): $folder"
