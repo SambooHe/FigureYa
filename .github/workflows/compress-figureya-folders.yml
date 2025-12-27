@@ -74,9 +74,9 @@ jobs:
           if [ -n "$CHANGED_FOLDERS" ]; then
             # Trim leading space
             CHANGED_FOLDERS=$(echo "$CHANGED_FOLDERS" | sed 's/^ //')
-            echo "CHANGED_FOLDERS=$CHANGED_FOLDERS" >> $GITHUB_ENV
+            # Save to a file instead of env variable to avoid parsing issues
+            echo "$CHANGED_FOLDERS" > /tmp/changed_folders.txt
             echo "HAS_CHANGES=true" >> $GITHUB_ENV
-            echo "SOURCE_COMMIT=$SOURCE_COMMIT" >> $GITHUB_ENV
             echo ""
             echo "Changed folders to compress: $CHANGED_FOLDERS"
 
@@ -100,8 +100,8 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             cd ../source
 
-            # Convert space-separated list to array
-            for foldername in $CHANGED_FOLDERS; do
+            # Read folders from file
+            for foldername in $(cat /tmp/changed_folders.txt); do
               zipfile="../target/${foldername}.zip"
               echo "Compressing $foldername to $zipfile"
 
