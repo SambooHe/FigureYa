@@ -26,7 +26,9 @@
       "Bash(git stash:*)",
       "Bash(git reset:*)",
       "Bash(ln:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git log:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

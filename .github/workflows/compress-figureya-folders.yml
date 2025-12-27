@@ -32,24 +32,25 @@ jobs:
           # Get list of all FigureYa folders
           ALL_FOLDERS=$(find . -maxdepth 1 -type d -name 'FigureYa*' | sed 's|^\./||' | sort)
 
-          # Check each folder for changes by comparing git commit timestamps
+          # Check each folder for changes by comparing with target zip files
           CHANGED_FOLDERS=""
           for folder in $ALL_FOLDERS; do
-            # Get the latest git commit timestamp for files in this folder
-            # Using git log to get the last modification time (Unix timestamp)
-            SOURCE_TIME=$(git log -1 --format=%ct -- "$folder" 2>/dev/null || echo "0")
+            # Get the latest git commit timestamp for any file within this folder
+            LATEST_FILE_TIME=$(find "$folder" -type f -exec git log -1 --format=%ct -- {} \; 2>/dev/null | sort -rn | head -n 1 || echo "0")
 
             # Check if corresponding zip file exists in target
             if [ -f "../target/${folder}.zip" ]; then
-              # Get modification time of the zip file (Linux stat syntax)
-              ZIP_TIME=$(stat -c '%Y' "../target/${folder}.zip" 2>/dev/null || echo "0")
+              # Get the git commit timestamp of the zip file in target repo
+              cd ../target
+              ZIP_COMMIT_TIME=$(git log -1 --format=%ct -- "${folder}.zip" 2>/dev/null || echo "0")
+              cd ../source
 
-              # Compare timestamps
-              if [ "$SOURCE_TIME" -gt "$ZIP_TIME" ]; then
-                echo "Changed folder detected: $folder (git commit: $SOURCE_TIME, zip: $ZIP_TIME)"
+              # Compare: if source has newer commits than zip, need to update
+              if [ "$LATEST_FILE_TIME" -gt "$ZIP_COMMIT_TIME" ]; then
+                echo "Changed folder detected: $folder (source latest: $LATEST_FILE_TIME, zip commit: $ZIP_COMMIT_TIME)"
                 CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
               else
-                echo "Folder unchanged: $folder (git commit: $SOURCE_TIME, zip: $ZIP_TIME)"
+                echo "Folder unchanged: $folder (source latest: $LATEST_FILE_TIME, zip commit: $ZIP_COMMIT_TIME)"
               fi
             else
               # Zip file doesn't exist, need to create it
