@@ -36,17 +36,17 @@ jobs:
           CHANGED_FOLDERS=""
           for folder in $ALL_FOLDERS; do
             # Get the latest modification time of any file in the source folder
-            SOURCE_TIME=$(find "$folder" -type f -printf '%T@\n' 2>/dev/null | sort -r | head -1 || echo "0")
+            # Using find with -exec stat to avoid pipe issues
+            SOURCE_TIME=$(find "$folder" -type f -exec stat -c '%Y' {} \; 2>/dev/null | sort -rn | head -n 1 || echo "0")
 
             # Check if corresponding zip file exists in target
             if [ -f "../target/${folder}.zip" ]; then
               # Get modification time of the zip file
               ZIP_TIME=$(stat -c '%Y' "../target/${folder}.zip" 2>/dev/null || echo "0")
 
-              # Compare timestamps (convert SOURCE_TIME from decimal to integer)
-              SOURCE_TIME_INT=$(echo "$SOURCE_TIME" | cut -d. -f1)
-              if [ "$SOURCE_TIME_INT" -gt "$ZIP_TIME" ]; then
-                echo "Changed folder detected: $folder (source: $SOURCE_TIME_INT, zip: $ZIP_TIME)"
+              # Compare timestamps
+              if [ "$SOURCE_TIME" -gt "$ZIP_TIME" ]; then
+                echo "Changed folder detected: $folder (source: $SOURCE_TIME, zip: $ZIP_TIME)"
                 CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
               fi
             else
