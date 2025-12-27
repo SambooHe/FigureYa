@@ -79,16 +79,14 @@ jobs:
             echo "SOURCE_COMMIT=$SOURCE_COMMIT" >> $GITHUB_ENV
             echo ""
             echo "Changed folders to compress: $CHANGED_FOLDERS"
+
+            # Save the current source commit for next time
+            echo "$SOURCE_COMMIT" > ../target/.last_source_commit
+            echo "Saved source commit: $SOURCE_COMMIT"
           else
             echo "HAS_CHANGES=false" >> $GITHUB_ENV
             echo "No changed folders detected"
           fi
-
-      - name: Save Current Commit
-        if: env.HAS_CHANGES == 'true'
-        run: |
-          # Save the current source commit for next time
-          echo "$SOURCE_COMMIT" > target/.last_source_commit
 
       - name: Compress and Push Changed Folders
         working-directory: source
