@@ -32,22 +32,24 @@ jobs:
           # Get list of all FigureYa folders
           ALL_FOLDERS=$(find . -maxdepth 1 -type d -name 'FigureYa*' | sed 's|^\./||' | sort)
 
-          # Check each folder for changes by comparing modification times
+          # Check each folder for changes by comparing git commit timestamps
           CHANGED_FOLDERS=""
           for folder in $ALL_FOLDERS; do
-            # Get the latest modification time of any file in the source folder
-            # Using find with -exec stat to avoid pipe issues
-            SOURCE_TIME=$(find "$folder" -type f -exec stat -c '%Y' {} \; 2>/dev/null | sort -rn | head -n 1 || echo "0")
+            # Get the latest git commit timestamp for files in this folder
+            # Using git log to get the last modification time (Unix timestamp)
+            SOURCE_TIME=$(git log -1 --format=%ct -- "$folder" 2>/dev/null || echo "0")
 
             # Check if corresponding zip file exists in target
             if [ -f "../target/${folder}.zip" ]; then
-              # Get modification time of the zip file
+              # Get modification time of the zip file (Linux stat syntax)
               ZIP_TIME=$(stat -c '%Y' "../target/${folder}.zip" 2>/dev/null || echo "0")
 
               # Compare timestamps
               if [ "$SOURCE_TIME" -gt "$ZIP_TIME" ]; then
-                echo "Changed folder detected: $folder (source: $SOURCE_TIME, zip: $ZIP_TIME)"
+                echo "Changed folder detected: $folder (git commit: $SOURCE_TIME, zip: $ZIP_TIME)"
                 CHANGED_FOLDERS="$CHANGED_FOLDERS $folder"
+              else
+                echo "Folder unchanged: $folder (git commit: $SOURCE_TIME, zip: $ZIP_TIME)"
               fi
             else
               # Zip file doesn't exist, need to create it
