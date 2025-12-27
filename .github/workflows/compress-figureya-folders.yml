@@ -76,7 +76,10 @@ jobs:
             CHANGED_FOLDERS=$(echo "$CHANGED_FOLDERS" | sed 's/^ //')
             # Save to a file instead of env variable to avoid parsing issues
             echo "$CHANGED_FOLDERS" > /tmp/changed_folders.txt
-            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+            {
+              echo 'HAS_CHANGES=true'
+              echo "CHANGED_FOLDERS_COUNT=$(echo "$CHANGED_FOLDERS" | wc -w)"
+            } >> $GITHUB_ENV
             echo ""
             echo "Changed folders to compress: $CHANGED_FOLDERS"
 
@@ -85,6 +88,7 @@ jobs:
             echo "Saved source commit: $SOURCE_COMMIT"
           else
             echo "HAS_CHANGES=false" >> $GITHUB_ENV
+            echo "CHANGED_FOLDERS_COUNT=0" >> $GITHUB_ENV
             echo "No changed folders detected"
           fi
 
@@ -100,33 +104,82 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             cd ../source
 
-            # Read folders from file
-            for foldername in $(cat /tmp/changed_folders.txt); do
+            # Read folders from file and process each one
+            echo "Reading changed folders from /tmp/changed_folders.txt"
+            cat /tmp/changed_folders.txt
+
+            while IFS= read -r foldername; do
+              # Skip empty lines
+              [ -z "$foldername" ] && continue
+
+              echo "========================================="
+              echo "Processing folder: $foldername"
+              echo "========================================="
+
+              # Validate folder name format
+              if ! echo "$foldername" | grep -qE '^FigureYa[0-9A-Za-z_]+$'; then
+                echo "ERROR: Invalid folder name format: $foldername"
+                continue
+              fi
+
               zipfile="../target/${foldername}.zip"
               echo "Compressing $foldername to $zipfile"
+
+              # Check if source folder exists
+              if [ ! -d "$foldername" ]; then
+                echo "ERROR: Source folder $foldername does not exist"
+                continue
+              fi
 
               # Remove old zip file if it exists
               rm -f "$zipfile"
 
-              # Create new zip
+              # Create new zip with error handling
               if [ "$foldername" = "FigureYa308IHS" ]; then
-                zip -r -q "$zipfile" "$foldername" -x "$foldername/Results/out_unPruned.rds"
+                zip -r -q "$zipfile" "$foldername" -x "$foldername/Results/out_unPruned.rds" 2>&1 || {
+                  echo "ERROR: Failed to create zip for $foldername"
+                  continue
+                }
               else
-                zip -r -q "$zipfile" "$foldername"
+                zip -r -q "$zipfile" "$foldername" 2>&1 || {
+                  echo "ERROR: Failed to create zip for $foldername"
+                  continue
+                }
               fi
+
+              # Verify zip file was created
+              if [ ! -f "$zipfile" ]; then
+                echo "ERROR: Zip file was not created: $zipfile"
+                continue
+              fi
+
+              echo "Successfully created zip file"
 
               # Commit and push immediately
               cd ../target
               git add "${foldername}.zip"
               git add .last_source_commit
-              git commit -m "Update ${foldername}.zip [skip ci]"
-              git push
-              echo "✓ Pushed $foldername.zip"
+
+              # Check if there are changes to commit
+              if git diff --cached --quiet; then
+                echo "No changes to commit for $foldername"
+              else
+                git commit -m "Update ${foldername}.zip [skip ci]"
+                if git push; then
+                  echo "✓ Pushed $foldername.zip"
+                else
+                  echo "ERROR: Failed to push $foldername.zip"
+                fi
+              fi
 
               # Clean up: remove the zip to save space (it's already in git)
               rm -f "${foldername}.zip"
               git checkout "${foldername}.zip" 2>/dev/null || true
 
               cd ../source
-            done
+            done < /tmp/changed_folders.txt
+
+            echo "========================================="
+            echo "All folders processed"
+            echo "========================================="
           fi
