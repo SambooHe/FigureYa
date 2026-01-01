@@ -25,26 +25,55 @@
       if (modal) modal.style.display = 'none';
     }
 
-    function toggleSelectAll() {
-      const checkbox = document.getElementById('selectAllCheckbox');
-      const fileCheckboxes = document.querySelectorAll('.file-item input[type="checkbox"]');
-      fileCheckboxes.forEach(cb => cb.checked = checkbox.checked);
+    function showDownloadModal(folderName) {
+      const modal = document.getElementById('downloadModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const fileList = document.getElementById('fileList');
+
+      modalTitle.textContent = `Download ${folderName}`;
+      fileList.innerHTML = `
+        <div style="text-align:center;padding:30px 20px;">
+          <p style="margin-bottom:20px;color:#4a5568;">Choose how you want to download this folder:</p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <button onclick="downloadFolderZip('${folderName}')" class="btn-modal btn-modal-download" style="width:100%;margin:0;padding:12px 20px;font-size:1em;">
+              📦 Download as ZIP
+            </button>
+            <a href="https://github.com/ying-ge/FigureYa/tree/main/${folderName}" target="_blank"
+               class="btn-modal btn-modal-cancel" style="display:block;text-align:center;text-decoration:none;width:100%;margin:0;padding:12px 20px;font-size:1em;">
+              🔗 View on GitHub
+            </a>
+          </div>
+          <p style="margin-top:20px;font-size:0.85em;color:#718096;">
+            The ZIP will be downloaded from GitHub repository
+          </p>
+        </div>
+      `;
+
+      modal.style.display = 'flex';
     }
 
-    function downloadSelected() {
-      const selectedFiles = [];
-      const fileCheckboxes = document.querySelectorAll('.file-item input[type="checkbox"]:checked');
-      fileCheckboxes.forEach(cb => {
-        const fileName = cb.closest('.file-item').querySelector('.file-name').textContent;
-        selectedFiles.push(fileName);
-      });
+    function downloadFolderZip(folderName) {
+      // GitHub API endpoint for downloading folder as ZIP
+      const repoUrl = 'https://github.com/ying-ge/FigureYa';
+      const zipUrl = `${repoUrl}/archive/refs/heads/main.zip`;
 
-      if (selectedFiles.length === 0) {
-        alert('Please select at least one file to download.');
-        return;
+      // Note: This downloads the entire repo
+      // For individual folder download, we need to inform the user
+      const message = `
+Currently, GitHub doesn't support downloading individual folders directly.
+
+Would you like to:
+1. Download the entire repository as ZIP
+2. View the folder on GitHub and download manually
+
+      `.trim();
+
+      if (confirm(message + '\n\nClick OK to download the full repository, or Cancel to view on GitHub.')) {
+        window.open(zipUrl, '_blank');
+      } else {
+        window.open(`${repoUrl}/tree/main/${folderName}`, '_blank');
       }
 
-      alert(`Download functionality not implemented yet.\n\nSelected files:\n${selectedFiles.join('\n')}`);
       closeDownloadModal();
     }
 
@@ -517,21 +546,6 @@
       overflow-y: auto;
       flex: 1;
     }
-    .modal-footer {
-      padding: 15px 20px;
-      border-top: 1px solid #e2e8f0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f7fafc;
-      border-radius: 0 0 12px 12px;
-    }
-    .select-all-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.95em;
-    }
     .btn-modal {
       padding: 10px 20px;
       border: none;
@@ -543,7 +557,6 @@
     .btn-modal-cancel {
       background: #e2e8f0;
       color: #4a5568;
-      margin-right: 10px;
     }
     .btn-modal-cancel:hover {
       background: #cbd5e0;
@@ -558,50 +571,6 @@
     .file-list {
       max-height: 400px;
       overflow-y: auto;
-    }
-    .file-item {
-      padding: 6px 0;
-    }
-    .file-item.directory {
-      margin-top: 8px;
-    }
-    .file-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      padding: 6px 8px;
-      border-radius: 4px;
-      transition: background 0.1s;
-    }
-    .file-label:hover {
-      background: #f7fafc;
-    }
-    .file-label input[type="checkbox"] {
-      cursor: pointer;
-    }
-    .file-icon {
-      font-size: 1.1em;
-      width: 20px;
-      text-align: center;
-    }
-    .dir-icon {
-      color: #ed8936;
-    }
-    .file-name {
-      flex: 1;
-      word-break: break-all;
-    }
-    .file-size {
-      font-size: 0.85em;
-      color: #718096;
-      white-space: nowrap;
-      margin-left: 8px;
-    }
-    .file-children {
-      margin-left: 20px;
-      border-left: 1px solid #e2e8f0;
-      padding-left: 8px;
     }
 
     @media (max-width: 768px) {
@@ -697,21 +666,11 @@
 <div id="downloadModal" class="download-modal">
   <div class="download-modal-content">
     <div class="modal-header">
-      <h2 id="modalTitle">Select Files to Download</h2>
+      <h2 id="modalTitle">Download Folder</h2>
       <button class="modal-close" onclick="closeDownloadModal()">&times;</button>
     </div>
     <div class="modal-body">
       <div id="fileList" class="file-list"></div>
-    </div>
-    <div class="modal-footer">
-      <div class="select-all-wrapper">
-        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
-        <label for="selectAllCheckbox">Select All</label>
-      </div>
-      <div>
-        <button class="btn-modal btn-modal-cancel" onclick="closeDownloadModal()">Cancel</button>
-        <button class="btn-modal btn-modal-download" onclick="downloadSelected()">Download Selected</button>
-      </div>
     </div>
   </div>
 </div>

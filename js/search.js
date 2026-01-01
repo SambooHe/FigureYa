@@ -64,10 +64,23 @@ function renderToc() {
         // 直接使用从 chapters.json 继承来的 thumb 路径
         const thumb = folderData.thumb;
 
-        html += `<div class="card">`;
+        html += `<div class="card" data-folder="${folderData.folder}">`;
+
+        // 添加可点击的图片，带下载图标提示
+        html += `<div class="card-image-wrapper" style="position:relative;cursor:pointer;" onclick="showDownloadModal('${folderData.folder}')">`;
         html += thumb
           ? `<img src="${thumb}" alt="${folderData.folder}" loading="lazy" style="opacity:0;transition:opacity 0.3s" onload="this.style.opacity=1" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="width:100%;height:80px;background:#eee;border-radius:6px;margin-bottom:8px;display:none;"></div>`
           : `<div style="width:100%;height:80px;background:#eee;border-radius:6px;margin-bottom:8px;"></div>`;
+
+        // 添加下载图标覆盖层
+        html += `<div class="download-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </div>`;
+        html += `</div>`;
 
         html += `<div class="card-title">${folderData.folder}</div>`;
         html += `<div class="card-links">`;
@@ -77,6 +90,18 @@ function renderToc() {
         html += `</div></div>`;
       });
       tocGrid.innerHTML = html;
+
+      // 添加卡片悬停效果
+      setTimeout(() => {
+        document.querySelectorAll('.card-image-wrapper').forEach(wrapper => {
+          wrapper.addEventListener('mouseenter', function() {
+            this.querySelector('.download-overlay').style.opacity = '1';
+          });
+          wrapper.addEventListener('mouseleave', function() {
+            this.querySelector('.download-overlay').style.opacity = '0';
+          });
+        });
+      }, 100);
 
       console.log(`✅ Rendered ${sortedFolders.length} modules in ${(performance.now() - loadAllChapters.startTime).toFixed(0)}ms`);
     });
@@ -201,10 +226,23 @@ function doSearch() {
       }
     }
 
-    filteredHtml += `<div class="card">`;
+    filteredHtml += `<div class="card" data-folder="${folderData.folder}">`;
+
+    // 添加可点击的图片
+    filteredHtml += `<div class="card-image-wrapper" style="position:relative;cursor:pointer;" onclick="showDownloadModal('${folderData.folder}')">`;
     filteredHtml += thumb
       ? `<img src="${thumb}" alt="${folderData.folder}" loading="lazy">`
       : `<div style="width:100%;height:80px;background:#eee;border-radius:6px;margin-bottom:8px;"></div>`;
+
+    // 添加下载图标覆盖层
+    filteredHtml += `<div class="download-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s;">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+    </div>`;
+    filteredHtml += `</div>`;
 
     filteredHtml += `<div class="card-title">${folderData.folder}</div>`;
     filteredHtml += `<div class="card-links">`;
@@ -231,6 +269,16 @@ function doSearch() {
 
   resultsGrid.innerHTML = filteredHtml;
   resultsGrid.style.display = "flex";
+
+  // 添加卡片悬停效果
+  document.querySelectorAll('#resultsGrid .card-image-wrapper').forEach(wrapper => {
+    wrapper.addEventListener('mouseenter', function() {
+      this.querySelector('.download-overlay').style.opacity = '1';
+    });
+    wrapper.addEventListener('mouseleave', function() {
+      this.querySelector('.download-overlay').style.opacity = '0';
+    });
+  });
 }
 
 function clearSearch() {
