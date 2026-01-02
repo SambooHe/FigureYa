@@ -1,17 +1,156 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FigureYa Results Browser</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="apple-touch-icon" href="logo.svg">
   <script src="js/fuse.min.js"></script>
   <script src="js/search.js" defer></script>
   <style>
-    body { font-family: sans-serif; }
-    #searchResults { margin-top: 2em; }
-    .result { margin-bottom: 1em; }
-    .result-title { font-weight: bold; }
-    .highlight { background: yellow; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f7fa;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1em 2em;
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-logo {
+      height: 32px;
+      width: auto;
+    }
+    .header-title {
+      font-size: 1.25em;
+      font-weight: 600;
+      color: #1a202c;
+    }
+    .header-nav {
+      display: flex;
+      gap: 20px;
+    }
+    .header-nav a {
+      color: #4a5568;
+      text-decoration: none;
+      font-size: 0.95em;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    .header-nav a:hover {
+      color: #3182ce;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2em 1em;
+    }
+    .intro-box {
+      background: #fff;
+      padding: 1.5em 2em;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 2em;
+    }
+    .intro-box h1 {
+      text-align: center;
+      color: #1a202c;
+      margin-bottom: 0.8em;
+    }
+    .intro-box hr {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 1.5em 0;
+    }
+    .intro-box h2 {
+      font-size: 1.2em;
+      color: #2d3748;
+      margin-bottom: 0.5em;
+    }
+    .intro-box ul {
+      color: #4a5568;
+      line-height: 1.6;
+    }
+    .intro-box a {
+      color: #3182ce;
+      text-decoration: none;
+    }
+    .intro-box a:hover {
+      text-decoration: underline;
+    }
+    .note-box {
+      background-color: #ebf8ff;
+      border-left: 4px solid #3182ce;
+      padding: 12px 16px;
+      margin: 1em 0;
+      border-radius: 6px;
+    }
+    .search-section {
+      background: #fff;
+      padding: 1.5em 2em;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 2em;
+    }
+    .search-header {
+      text-align: center;
+      margin-bottom: 1.5em;
+    }
+    .search-header h1 {
+      margin: 0;
+      color: #1a202c;
+    }
+    .search-input-wrapper {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1em;
+    }
+    #searchBox {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 1.1em;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      transition: border-color 0.2s;
+    }
+    #searchBox:focus {
+      outline: none;
+      border-color: #3182ce;
+    }
+    .btn {
+      padding: 12px 24px;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #3182ce;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #2c5282;
+    }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
     .grid {
       display: flex;
       flex-wrap: wrap;
@@ -57,49 +196,180 @@
       text-align: center;
       word-break: break-all;
     }
+    .card-links a {
+      color: #3182ce;
+      text-decoration: none;
+    }
+    .card-links a:hover {
+      text-decoration: underline;
+    }
+    .highlight {
+      background: #fef08a;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    .loading, .error, .no-results {
+      padding: 1em;
+      text-align: center;
+      color: #718096;
+    }
+    .error {
+      color: #e53e3e;
+    }
     @media (max-width: 1100px) {
       .card { flex-basis: 43%; }
     }
     @media (max-width: 700px) {
       .grid { gap: 15px; }
       .card { flex-basis: 97%; }
+      .header {
+        flex-direction: column;
+        gap: 1em;
+      }
+      .header-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
 
-<div style="font-family: sans-serif; max-width: 800px; margin: 2em auto; padding: 1em; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
-    <h1 style="text-align: center;">FigureYa: Interactive Results Browser</h1>
-    <p>Welcome! This page provides a searchable interface for all reports and figures generated by the <strong>FigureYa</strong> project. It's designed to help you quickly find and explore the results from our manuscript.</p>
+<header class="header">
+  <div class="header-left">
+    <img src="logo.svg" alt="FigureYa Logo" class="header-logo">
+    <span class="header-title">FigureYa</span>
+  </div>
+  <nav class="header-nav">
+    <a href="#citation">Citation</a>
+    <a href="https://zread.ai/ying-ge/FigureYa" target="_blank">FigureYa AI Assistant</a>
+    <a href="https://github.com/ying-ge/FigureYa/stargazers" target="_blank">Stats</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="intro-box">
+    <h1>FigureYa: Interactive Results Browser</h1>
+    <hr>
+    <div class="note-box">
+      <p style="margin: 0;"><strong>Note:</strong> This repository (<strong>FigureYa</strong>) contains analyses and visualizations that primarily use <strong>R</strong>. For analyses that require <strong>Python</strong> (Jupyter notebooks), please visit: <a href="https://ying-ge.github.io/FigureYapy" target="_blank">https://ying-ge.github.io/FigureYapy</a></p>
+    </div>
+    <div class="note-box" style="background-color: #fffbeb; border-left-color: #d69e2e;">
+      <p style="margin: 0; font-size: 0.95em;"><strong>Big Data Download:</strong> For these larger files: some Rmd files include direct download links for the required data files. For files without direct download links, please visit our Baidu Cloud storage. Join the baidu group: <strong>979397987</strong> to access the download links.</p>
+    </div>
     <hr>
     <h2>How to Use This Page</h2>
     <ul>
-        <li><strong>Search Everything:</strong> Use the <strong>search box below</strong> to perform a full-text search across all reports. You can look for a gene name, an R package, a specific analysis, or any other keyword.</li>
-        <li><strong>Browse Visually:</strong> Click on any of the <strong>thumbnails below</strong> to open and view an individual report directly in your browser.</li>
+      <li><strong>Search Everything:</strong> Use the <strong>search box below</strong> to perform a full-text search across all reports. You can look for a gene name, an R package, a specific analysis, or any other keyword.</li>
+      <li><strong>Browse Visually:</strong> Click on any of the <strong>thumbnails below</strong> to open and view an individual report directly in your browser.</li>
     </ul>
-    <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; margin: 1em 0; border-radius: 4px;">
-        <p style="margin: 0;"><strong>Note:</strong> This repository (<strong>FigureYa</strong>) contains analyses and visualizations that primarily use <strong>R</strong>. For analyses that require <strong>Python</strong> (Jupyter notebooks), please visit: <a href="https://ying-ge.github.io/FigureYapy" target="_blank" style="color: #1976d2; font-weight: bold;">https://ying-ge.github.io/FigureYapy</a></p>
-    </div>
     <h2>Get the Code and Data</h2>
     <p>All input files, analysis code (Rmd), and results are publicly available in the <a href="https://github.com/ying-ge/FigureYa/" target="_blank">main GitHub repository</a>. You can browse the files online or download them for offline use.</p>
-<h2>Citation</h2>
-<p>Xiaofan Lu, et al. (2025). FigureYa: A Standardized Visualization Framework for Enhancing Biomedical Data Interpretation and Research Efficiency. <i>iMetaMed</i>. <a href="https://doi.org/10.1002/imm3.70005" target="_blank">https://doi.org/10.1002/imm3.70005</a></p>
-</div>
-<hr>
+    <h2 id="citation">Citation</h2>
+    <p>Xiaofan Lu, et al. (2025). FigureYa: A Standardized Visualization Framework for Enhancing Biomedical Data Interpretation and Research Efficiency. <i>iMetaMed</i>. <a href="https://doi.org/10.1002/imm3.70005" target="_blank">https://doi.org/10.1002/imm3.70005</a></p>
+    <h2 id="contact">Contact</h2>
+    <p>WeChat ID: <strong>epigenomics</strong></p>
+  </div>
 
-<h1>Search and Browse Reports</h1>
-<input type="text" id="searchBox" placeholder="Enter keyword to search all FigureYa reports..." autocomplete="off" style="width:60%; font-size:1.1em;">
-<button onclick="doSearch()">Search</button>
-<button onclick="clearSearch()">Clear</button>
-<div id="searchResults"></div>
-<hr>
-<div id="tocGrid" class="grid"></div>
+  <div class="search-section">
+    <div class="search-header">
+      <h1>Search and Browse Reports</h1>
+    </div>
+    <div class="search-input-wrapper">
+      <input type="text" id="searchBox" placeholder="Search by keyword, gene name, or R package..." autocomplete="off">
+      <button class="btn btn-primary" onclick="doSearch()">Search</button>
+      <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+    </div>
+    <div id="searchResults"></div>
+  </div>
+
+  <div id="tocGrid" class="grid"></div>
+</div>
+
 <script>
+  // Load chapters.json and render cards
+  let chaptersData = [];
+
+  async function loadChapters() {
+    try {
+      const response = await fetch('chapters.json');
+      chaptersData = await response.json();
+      renderCards(chaptersData);
+    } catch (error) {
+      console.error('Failed to load chapters:', error);
+      document.getElementById('tocGrid').innerHTML =
+        '<div class="error">Failed to load content. Please refresh the page.</div>';
+    }
+  }
+
+  function renderCards(chapters) {
+    const grid = document.getElementById('tocGrid');
+
+    if (!chapters || chapters.length === 0) {
+      grid.innerHTML = '<div class="no-results">No reports found</div>';
+      return;
+    }
+
+    grid.innerHTML = chapters.map(chapter => `
+      <div class="card" data-id="${chapter.id}">
+        ${chapter.thumb ?
+          `<img src="${chapter.thumb}" alt="${chapter.title}" loading="lazy">` :
+          `<div style="width:160px;height:120px;background:#f7fafc;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;color:#cbd5e0;font-size:2em;">📊</div>`
+        }
+        <div class="card-title">${chapter.folder}</div>
+        <div class="card-links">
+          <a href="${chapter.html}" target="_blank">View Report →</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Override doSearch to use local chapters data
+  async function doSearch() {
+    const query = document.getElementById('searchBox').value.trim();
+    const resultsDiv = document.getElementById('searchResults');
+
+    if (!query) {
+      resultsDiv.innerHTML = '';
+      renderCards(chaptersData);
+      return;
+    }
+
+    // Simple search through titles and folder names
+    const results = chaptersData.filter(chapter =>
+      chapter.title.toLowerCase().includes(query.toLowerCase()) ||
+      chapter.folder.toLowerCase().includes(query.toLowerCase())
+    );
+
+    if (results.length === 0) {
+      resultsDiv.innerHTML = '<div class="no-results">No results found</div>';
+      renderCards([]);
+    } else {
+      resultsDiv.innerHTML = `<p style="text-align:center;color:#3182ce;padding:10px;">Found ${results.length} result(s)</p>`;
+      renderCards(results);
+    }
+  }
+
+  function clearSearch() {
+    document.getElementById('searchBox').value = '';
+    document.getElementById('searchResults').innerHTML = '';
+    renderCards(chaptersData);
+  }
+
+  // Initialize
   document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("searchBox").addEventListener("keydown", function(e){
-      if (e.key === "Enter") doSearch();
-    });
+    loadChapters();
+
+    // Search box enter key
+    const searchBox = document.getElementById("searchBox");
+    if (searchBox) {
+      searchBox.addEventListener("keydown", function(e){
+        if (e.key === "Enter") doSearch();
+      });
+    }
   });
 </script>
+
 </body>
 </html>
