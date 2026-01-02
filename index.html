@@ -7,6 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="apple-touch-icon" href="logo.svg">
   <script src="js/fuse.min.js"></script>
+  <script src="js/jszip.min.js"></script>
   <script src="js/search.js" defer></script>
   <script>
     function showCitation() {
@@ -71,6 +72,192 @@
           }
         });
       });
+    }
+
+    // Download functionality
+    let fileListsCache = null;
+
+    async function loadFileLists() {
+      if (fileListsCache) return fileListsCache;
+
+      try {
+        const response = await fetch('file_list.json');
+        fileListsCache = await response.json();
+        return fileListsCache;
+      } catch (error) {
+        console.error('Failed to load file lists:', error);
+        return null;
+      }
+    }
+
+    function getFileIcon(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      const iconMap = {
+        'csv': '📊',
+        'r': '📜',
+        'png': '🖼️',
+        'jpg': '🖼️',
+        'jpeg': '🖼️',
+        'svg': '🎨'
+      };
+      return iconMap[ext] || '📄';
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    async function showDownloadModal(folderName) {
+      const modal = document.getElementById('downloadModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const fileList = document.getElementById('fileList');
+
+      modalTitle.textContent = `Download Files from ${folderName}`;
+
+      // Show loading state
+      fileList.innerHTML = `
+        <div style="text-align:center;padding:40px;color:#718096;">
+          <p>Loading file list...</p>
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+
+      // Load file lists
+      const lists = await loadFileLists();
+
+      if (!lists || !lists[folderName]) {
+        fileList.innerHTML = `
+          <div style="text-align:center;padding:40px;color:#e53e3e;">
+            <p>No file list found for ${folderName}</p>
+            <a href="https://github.com/ying-ge/FigureYa/tree/main/${folderName}" target="_blank"
+               style="color:#3182ce;text-decoration:none;margin-top:16px;display:inline-block;">
+              View on GitHub →
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      const files = lists[folderName];
+
+      // Render file list with checkboxes
+      let html = `
+        <div style="display:flex;flex-direction:column;height:100%;">
+          <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;">
+              <input type="checkbox" id="selectAllFiles" checked
+                     onchange="toggleAllFiles(this.checked)"
+                     style="width:18px;height:18px;cursor:pointer;">
+              <span>Select All Files (${files.length})</span>
+            </label>
+          </div>
+          <div style="overflow-y:auto;padding-right:8px;flex:1;min-height:0;">
+      `;
+
+      files.forEach((file, index) => {
+        html += `
+          <label style="display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:4px;
+                        border-radius:6px;cursor:pointer;transition:background 0.2s;"
+                 onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='transparent'">
+            <input type="checkbox" class="file-checkbox" data-index="${index}"
+                   data-filename="${file.name}" checked
+                   style="width:16px;height:16px;cursor:pointer;">
+            <span style="font-size:1.2em;">${getFileIcon(file.name)}</span>
+            <span style="flex:1;font-family:monospace;font-size:0.9em;word-break:break-all;">${file.name}</span>
+            <span style="font-size:0.85em;color:#718096;">${formatFileSize(file.size)}</span>
+          </label>
+        `;
+      });
+
+      html += `
+          </div>
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;
+                      display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+            <a href="https://github.com/ying-ge/FigureYa/tree/main/${folderName}" target="_blank"
+               style="color:#718096;text-decoration:none;font-size:0.9em;">
+              🔗 View on GitHub
+            </a>
+            <div style="display:flex;gap:12px;">
+              <button onclick="closeDownloadModal()"
+                      style="padding:10px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;cursor:pointer;">
+                Cancel
+              </button>
+              <button onclick="downloadSelectedFiles('${folderName}')"
+                      style="padding:10px 24px;background:#3182ce;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;">
+                📦 Download
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      fileList.innerHTML = html;
+    }
+
+    function toggleAllFiles(checked) {
+      document.querySelectorAll('.file-checkbox').forEach(cb => {
+        cb.checked = checked;
+      });
+    }
+
+    function closeDownloadModal() {
+      document.getElementById('downloadModal').style.display = 'none';
+    }
+
+    async function downloadSelectedFiles(folderName) {
+      const selected = [];
+      document.querySelectorAll('.file-checkbox:checked').forEach(cb => {
+        selected.push(cb.dataset.filename);
+      });
+
+      if (selected.length === 0) {
+        alert('Please select at least one file');
+        return;
+      }
+
+      const downloadBtn = document.querySelector('button[onclick^="downloadSelectedFiles"]');
+      const originalText = downloadBtn.innerHTML;
+      downloadBtn.innerHTML = '⏳ Preparing...';
+      downloadBtn.disabled = true;
+
+      try {
+        const zip = new JSZip();
+        const folder = zip.folder(folderName);
+
+        const baseUrl = `https://raw.githubusercontent.com/ying-ge/FigureYa/main/${folderName}/`;
+
+        for (const filename of selected) {
+          const url = baseUrl + filename;
+          const response = await fetch(url);
+          if (response.ok) {
+            const blob = await response.blob();
+            folder.file(filename, blob);
+          }
+        }
+
+        const content = await zip.generateAsync({ type: 'blob' });
+        const downloadUrl = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `${folderName}_files.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+
+        closeDownloadModal();
+      } catch (error) {
+        console.error('Download failed:', error);
+        alert('Download failed. Please try again or download files from GitHub.');
+      } finally {
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+      }
     }
   </script>
   <style>
@@ -370,6 +557,33 @@
     .copy-container .text-content {
       flex: 1;
     }
+    .download-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .download-modal-content {
+      background: #fff;
+      padding: 2em;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+    }
+    .file-list {
+      overflow-y: auto;
+      flex: 1;
+    }
     @media (max-width: 1100px) {
       .card { flex-basis: 43%; }
     }
@@ -483,6 +697,17 @@
   </div>
 
   <div id="tocGrid" class="grid"></div>
+</div>
+
+<!-- Download Modal -->
+<div id="downloadModal" class="download-modal">
+  <div class="download-modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 id="modalTitle" style="margin:0;">Download Files</h2>
+      <button onclick="closeDownloadModal()" style="background:none;border:none;font-size:1.5em;cursor:pointer;color:#718096;padding:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:4px;">✕</button>
+    </div>
+    <div id="fileList" class="file-list"></div>
+  </div>
 </div>
 
 <script>
@@ -621,14 +846,14 @@
     }
 
     grid.innerHTML = chapters.map(chapter => `
-      <div class="card" data-id="${chapter.id}">
+      <div class="card" data-id="${chapter.id}" onclick="showDownloadModal('${chapter.folder}')" style="cursor: pointer;">
         ${chapter.thumb ?
           `<img src="${chapter.thumb}" alt="${chapter.title}" loading="lazy">` :
           `<div style="width:160px;height:120px;background:#f7fafc;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;color:#cbd5e0;font-size:2em;">📊</div>`
         }
         <div class="card-title">${chapter.folder}</div>
         <div class="card-links">
-          <a href="${chapter.html}" target="_blank">View Report →</a>
+          <a href="${chapter.html}" target="_blank" onclick="event.stopPropagation()">View Report →</a>
         </div>
       </div>
     `).join('');
