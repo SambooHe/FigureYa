@@ -188,6 +188,44 @@
     .error {
       color: #e53e3e;
     }
+    .viz-category-section {
+      margin-top: 1.5em;
+      text-align: center;
+    }
+    .viz-category-title {
+      font-size: 0.9em;
+      color: #718096;
+      margin-bottom: 0.8em;
+      font-weight: 500;
+    }
+    .viz-category-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .viz-category-btn {
+      padding: 8px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      background: #fff;
+      color: #4a5568;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    .viz-category-btn:hover {
+      border-color: #3182ce;
+      background: #ebf8ff;
+      color: #3182ce;
+    }
+    .viz-category-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
     @media (max-width: 1100px) {
       .card { flex-basis: 43%; }
     }
@@ -240,6 +278,20 @@
       <button class="btn btn-primary" onclick="doSearch()">Search</button>
       <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
     </div>
+
+    <div class="viz-category-section">
+      <div class="viz-category-title">Filter by Visualization Type</div>
+      <div class="viz-category-buttons" id="vizCategoryButtons">
+        <button class="viz-category-btn active" data-category="all" onclick="filterByVizCategory('all')">All</button>
+        <button class="viz-category-btn" data-category="圆圈图" onclick="filterByVizCategory('圆圈图')">○ Circular</button>
+        <button class="viz-category-btn" data-category="连线图" onclick="filterByVizCategory('连线图')">∞ Network</button>
+        <button class="viz-category-btn" data-category="散点图" onclick="filterByVizCategory('散点图')">• Scatter</button>
+        <button class="viz-category-btn" data-category="相关性" onclick="filterByVizCategory('相关性')">↔ Correlation</button>
+        <button class="viz-category-btn" data-category="PCA" onclick="filterByVizCategory('PCA')">◇ PCA</button>
+        <button class="viz-category-btn" data-category="趋势图之生存分析" onclick="filterByVizCategory('趋势图之生存分析')">▷ Survival</button>
+      </div>
+    </div>
+
     <div id="searchResults"></div>
   </div>
 
@@ -249,16 +301,127 @@
 <script>
   // Load chapters.json and render cards
   let chaptersData = [];
+  let vizCategories = {};
+  let currentVizCategory = 'all';
 
   async function loadChapters() {
     try {
       const response = await fetch('chapters.json');
       chaptersData = await response.json();
       renderCards(chaptersData);
+      loadVizCategories();
     } catch (error) {
       console.error('Failed to load chapters:', error);
       document.getElementById('tocGrid').innerHTML =
         '<div class="error">Failed to load content. Please refresh the page.</div>';
+    }
+  }
+
+  // Load categories on page load
+  async function loadVizCategories() {
+    try {
+      const response = await fetch('categories.txt');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const text = await response.text();
+      vizCategories = parseVizCategories(text);
+      console.log('Loaded categories:', Object.keys(vizCategories));
+      updateCategoryButtonCounts();
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      // Disable category buttons on error
+      document.querySelectorAll('.viz-category-btn').forEach(btn => {
+        if (btn.dataset.category !== 'all') {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+        }
+      });
+    }
+  }
+
+  // Update category button counts
+  function updateCategoryButtonCounts() {
+    Object.keys(vizCategories).forEach(category => {
+      const count = vizCategories[category].length;
+      const btn = document.querySelector(`.viz-category-btn[data-category="${category}"]`);
+      if (btn) {
+        // Add count badge if not already present
+        if (!btn.querySelector('.count-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'count-badge';
+          badge.textContent = ` (${count})`;
+          badge.style.fontSize = '0.85em';
+          badge.style.opacity = '0.8';
+          btn.appendChild(badge);
+        }
+      }
+    });
+  }
+
+  // Parse categories.txt
+  function parseVizCategories(text) {
+    const lines = text.split('\n').filter(line => line.trim());
+    const result = {};
+    let currentCategory = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (line.includes('小结｜')) {
+        const match = line.match(/^(.+)小结｜/);
+        if (match) {
+          const categoryName = match[1].trim();
+          if (!result[categoryName]) result[categoryName] = [];
+          currentCategory = categoryName;
+        }
+      } else if (line.includes('让')) {
+        continue;
+      } else if (line.startsWith('FigureYa')) {
+        if (currentCategory && result[currentCategory]) {
+          result[currentCategory].push(line.trim());
+        }
+      } else {
+        const knownCategories = ['圆圈图', '连线图', '散点图', '相关性', 'PCA', '趋势图之生存分析'];
+        if (knownCategories.includes(line.trim())) {
+          currentCategory = line.trim();
+          if (!result[currentCategory]) result[currentCategory] = [];
+        }
+      }
+    }
+
+    return result;
+  }
+
+  // Filter by visualization category
+  function filterByVizCategory(category) {
+    currentVizCategory = category;
+
+    // Update button states
+    document.querySelectorAll('.viz-category-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.category === category) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Clear search and show filtered results
+    document.getElementById('searchBox').value = '';
+    document.getElementById('searchResults').innerHTML = '';
+
+    if (category === 'all') {
+      renderCards(chaptersData);
+    } else {
+      const modules = vizCategories[category] || [];
+      const filteredChapters = chaptersData.filter(chapter =>
+        modules.some(module => chapter.folder === module || chapter.title.includes(module))
+      );
+      renderCards(filteredChapters);
+      if (filteredChapters.length > 0) {
+        document.getElementById('searchResults').innerHTML =
+          `<p style="text-align:center;color:#3182ce;padding:10px;">Showing ${filteredChapters.length} modules</p>`;
+      }
     }
   }
 
