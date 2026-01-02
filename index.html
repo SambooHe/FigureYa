@@ -383,9 +383,9 @@
       padding: 0;
     }
     .card {
-      flex: 1 0 210px;
-      max-width: 250px;
+      flex: 1 1 250px;
       min-width: 180px;
+      max-width: 350px;
       background: #fafaff;
       border-radius: 8px;
       padding: 12px;
@@ -584,15 +584,24 @@
       overflow-y: auto;
       flex: 1;
     }
-    @media (max-width: 1200px) {
-      .card { flex-basis: calc(33.333% - 22px); }
+    @media (min-width: 1600px) {
+      .card { flex: 1 1 280px; max-width: 380px; }
     }
-    @media (max-width: 900px) {
-      .card { flex-basis: calc(50% - 22px); }
+    @media (min-width: 2000px) {
+      .card { flex: 1 1 300px; max-width: 400px; }
+    }
+    @media (max-width: 1400px) {
+      .card { flex: 1 1 220px; max-width: 300px; }
+    }
+    @media (max-width: 1100px) {
+      .card { flex: 1 1 200px; max-width: 280px; }
+    }
+    @media (max-width: 768px) {
+      .grid { gap: 15px; }
+      .card { flex: 1 1 calc(50% - 15px); }
     }
     @media (max-width: 600px) {
-      .grid { gap: 15px; }
-      .card { flex-basis: calc(100% - 22px); }
+      .card { flex: 1 1 100%; max-width: 100%; }
       .header {
         flex-direction: column;
         gap: 1em;
