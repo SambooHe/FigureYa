@@ -7,6 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="apple-touch-icon" href="logo.svg">
   <script src="js/fuse.min.js"></script>
+  <script src="js/jszip.min.js"></script>
   <script src="js/search.js" defer></script>
   <script>
     function showCitation() {
@@ -68,56 +69,223 @@
       if (modal) modal.style.display = 'none';
     }
 
-    function showDownloadModal(folderName) {
+    // Global variable to store file list data
+    let fileLists = null;
+
+    // Load file list JSON
+    async function loadFileLists() {
+      if (fileLists) return fileLists;
+
+      try {
+        const response = await fetch('file_list.json');
+        fileLists = await response.json();
+        return fileLists;
+      } catch (error) {
+        console.error('Failed to load file list:', error);
+        return null;
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getFileIcon(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      const iconMap = {
+        'rmd': '📄',
+        'html': '🌐',
+        'pdf': '📕',
+        'csv': '📊',
+        'txt': '📝',
+        'r': '📜',
+        'png': '🖼️',
+        'jpg': '🖼️',
+        'jpeg': '🖼️',
+        'svg': '🎨'
+      };
+      return iconMap[ext] || '📄';
+    }
+
+    async function showDownloadModal(folderName) {
       const modal = document.getElementById('downloadModal');
       const modalTitle = document.getElementById('modalTitle');
       const fileList = document.getElementById('fileList');
 
-      modalTitle.textContent = `Download ${folderName}`;
+      modalTitle.textContent = `Select Files to Download from ${folderName}`;
+
+      // Show loading state
       fileList.innerHTML = `
-        <div style="text-align:center;padding:30px 20px;">
-          <p style="margin-bottom:20px;color:#4a5568;">Choose how you want to download this folder:</p>
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            <button onclick="downloadFolderZip('${folderName}')" class="btn-modal btn-modal-download" style="width:100%;margin:0;padding:12px 20px;font-size:1em;">
-              📦 Download as ZIP
-            </button>
-            <a href="https://github.com/ying-ge/FigureYa/tree/main/${folderName}" target="_blank"
-               class="btn-modal btn-modal-cancel" style="display:block;text-align:center;text-decoration:none;width:100%;margin:0;padding:12px 20px;font-size:1em;">
-              🔗 View on GitHub
-            </a>
-          </div>
-          <p style="margin-top:20px;font-size:0.85em;color:#718096;">
-            The ZIP will be downloaded from GitHub repository
-          </p>
+        <div style="text-align:center;padding:40px;color:#718096;">
+          <div class="loading-spinner" style="margin:0 auto 16px;"></div>
+          <p>Loading file list...</p>
         </div>
       `;
 
       modal.style.display = 'flex';
-    }
 
-    function downloadFolderZip(folderName) {
-      // GitHub API endpoint for downloading folder as ZIP
-      const repoUrl = 'https://github.com/ying-ge/FigureYa';
-      const zipUrl = `${repoUrl}/archive/refs/heads/main.zip`;
+      // Load file lists
+      const lists = await loadFileLists();
 
-      // Note: This downloads the entire repo
-      // For individual folder download, we need to inform the user
-      const message = `
-Currently, GitHub doesn't support downloading individual folders directly.
-
-Would you like to:
-1. Download the entire repository as ZIP
-2. View the folder on GitHub and download manually
-
-      `.trim();
-
-      if (confirm(message + '\n\nClick OK to download the full repository, or Cancel to view on GitHub.')) {
-        window.open(zipUrl, '_blank');
-      } else {
-        window.open(`${repoUrl}/tree/main/${folderName}`, '_blank');
+      if (!lists || !lists[folderName]) {
+        fileList.innerHTML = `
+          <div style="text-align:center;padding:40px;color:#e53e3e;">
+            <p>Failed to load file list for ${folderName}</p>
+            <a href="https://github.com/ying-ge/FigureYa/tree/main/${folderName}" target="_blank"
+               style="color:#3182ce;text-decoration:none;margin-top:16px;display:inline-block;">
+              View on GitHub →
+            </a>
+          </div>
+        `;
+        return;
       }
 
-      closeDownloadModal();
+      const files = lists[folderName];
+
+      // Render file list with checkboxes
+      let html = `
+        <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #e2e8f0;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;">
+            <input type="checkbox" id="selectAllFiles" checked
+                   onchange="toggleAllFiles(this.checked)"
+                   style="width:18px;height:18px;cursor:pointer;">
+            <span>Select All Files (${files.length})</span>
+          </label>
+          <p style="margin:8px 0 0 26px;font-size:0.85em;color:#718096;">
+            Total size: ${formatFileSize(files.reduce((sum, f) => sum + f.size, 0))}
+          </p>
+        </div>
+        <div style="max-height:400px;overflow-y:auto;padding-right:8px;">
+      `;
+
+      files.forEach((file, index) => {
+        html += `
+          <label style="display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:4px;
+                        border-radius:6px;cursor:pointer;transition:background 0.2s;"
+                 onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='transparent'">
+            <input type="checkbox" class="file-checkbox" data-index="${index}"
+                   data-filename="${file.name}" checked
+                   style="width:16px;height:16px;cursor:pointer;">
+            <span style="font-size:1.2em;">${getFileIcon(file.name)}</span>
+            <span style="flex:1;font-family:monospace;font-size:0.9em;word-break:break-all;">${file.name}</span>
+            <span style="font-size:0.85em;color:#718096;">${formatFileSize(file.size)}</span>
+          </label>
+        `;
+      });
+
+      html += `
+        </div>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;
+                    display:flex;justify-content:space-between;align-items:center;">
+          <a href="https://github.com/ying-ge/FigureYa/tree/main/${folderName}" target="_blank"
+             style="color:#718096;text-decoration:none;font-size:0.9em;">
+            🔗 View on GitHub
+          </a>
+          <div style="display:flex;gap:12px;">
+            <button onclick="closeDownloadModal()"
+                    style="padding:10px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;cursor:pointer;">
+              Cancel
+            </button>
+            <button onclick="downloadSelectedFiles('${folderName}')"
+                    style="padding:10px 24px;background:#3182ce;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;">
+              📦 Download Selected
+            </button>
+          </div>
+        </div>
+      `;
+
+      fileList.innerHTML = html;
+    }
+
+    function toggleAllFiles(checked) {
+      document.querySelectorAll('.file-checkbox').forEach(cb => {
+        cb.checked = checked;
+      });
+    }
+
+    async function downloadSelectedFiles(folderName) {
+      const selected = [];
+      document.querySelectorAll('.file-checkbox:checked').forEach(cb => {
+        selected.push({
+          name: cb.dataset.filename,
+          index: parseInt(cb.dataset.index)
+        });
+      });
+
+      if (selected.length === 0) {
+        alert('Please select at least one file to download.');
+        return;
+      }
+
+      const downloadBtn = document.querySelector('button[onclick="downloadSelectedFiles(\'' + folderName + '\')"]');
+      const originalText = downloadBtn.innerHTML;
+      downloadBtn.innerHTML = '⏳ Preparing...';
+      downloadBtn.disabled = true;
+
+      try {
+        // Create ZIP file
+        const zip = new JSZip();
+        const folder = zip.folder(folderName);
+
+        // Fetch all selected files
+        const fetchPromises = selected.map(async (file) => {
+          const url = `https://raw.githubusercontent.com/ying-ge/FigureYa/main/${folderName}/${file.name}`;
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Failed to fetch ${file.name}`);
+            const blob = await response.blob();
+            return { name: file.name, blob };
+          } catch (error) {
+            console.error(`Failed to download ${file.name}:`, error);
+            return null;
+          }
+        });
+
+        downloadBtn.innerHTML = '⏳ Downloading files...';
+        const results = await Promise.all(fetchPromises);
+
+        // Add files to ZIP
+        let addedCount = 0;
+        results.forEach(result => {
+          if (result && result.blob) {
+            folder.file(result.name, result.blob);
+            addedCount++;
+          }
+        });
+
+        if (addedCount === 0) {
+          throw new Error('No files could be downloaded');
+        }
+
+        downloadBtn.innerHTML = '⏳ Creating ZIP...';
+
+        // Generate ZIP
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+        // Download ZIP
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipBlob);
+        link.download = `${folderName}_selected_files.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        downloadBtn.innerHTML = '✓ Downloaded!';
+        setTimeout(() => {
+          closeDownloadModal();
+        }, 1500);
+
+      } catch (error) {
+        console.error('Download failed:', error);
+        alert(`Failed to create ZIP file: ${error.message}\n\nPlease try downloading from GitHub instead.`);
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+      }
     }
 
     // 点击遮罩层关闭模态框 (在 DOMContentLoaded 后执行)
