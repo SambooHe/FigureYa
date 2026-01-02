@@ -8,6 +8,71 @@
   <link rel="apple-touch-icon" href="logo.svg">
   <script src="js/fuse.min.js"></script>
   <script src="js/search.js" defer></script>
+  <script>
+    function showCitation() {
+      document.getElementById('citationModal').classList.add('active');
+    }
+    function showContact() {
+      document.getElementById('contactModal').classList.add('active');
+    }
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    // Copy to clipboard function
+    async function copyToClipboard(text, buttonElement) {
+      try {
+        await navigator.clipboard.writeText(text);
+
+        // Show success feedback
+        const originalText = buttonElement.innerHTML;
+        buttonElement.innerHTML = '✓ Copied!';
+        buttonElement.style.background = '#48bb78';
+
+        setTimeout(() => {
+          buttonElement.innerHTML = originalText;
+          buttonElement.style.background = '';
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+
+        try {
+          document.execCommand('copy');
+          const originalText = buttonElement.innerHTML;
+          buttonElement.innerHTML = '✓ Copied!';
+          buttonElement.style.background = '#48bb78';
+
+          setTimeout(() => {
+            buttonElement.innerHTML = originalText;
+            buttonElement.style.background = '';
+          }, 2000);
+        } catch (e) {
+          buttonElement.innerHTML = '✗ Failed';
+          buttonElement.style.background = '#f56565';
+        }
+
+        document.body.removeChild(textArea);
+      }
+    }
+
+    // Setup modal overlay click handlers
+    function setupModalOverlayClickHandlers() {
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+          if (e.target === this) {
+            this.classList.remove('active');
+          }
+        });
+      });
+    }
+  </script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -226,6 +291,85 @@
       color: #fff;
       box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 2em;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    .modal-content h3 {
+      margin-top: 0;
+      color: #1a202c;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #718096;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+    .modal-close:hover {
+      background: #f7fafc;
+      color: #1a202c;
+    }
+    .copy-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      margin-left: 8px;
+      font-size: 0.85em;
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      vertical-align: middle;
+    }
+    .copy-button:hover {
+      background: #2c5282;
+      transform: translateY(-1px);
+    }
+    .copy-button:active {
+      transform: translateY(0);
+    }
+    .copy-button svg {
+      width: 14px;
+      height: 14px;
+    }
+    .copy-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .copy-container .text-content {
+      flex: 1;
+    }
     @media (max-width: 1100px) {
       .card { flex-basis: 43%; }
     }
@@ -251,12 +395,56 @@
     <span class="header-title">FigureYa</span>
   </div>
   <nav class="header-nav">
-    <a href="#citation">Citation</a>
+    <a onclick="showCitation()">Citation</a>
     <a href="https://zread.ai/ying-ge/FigureYa" target="_blank">FigureYa AI Assistant</a>
     <a href="https://github.com/ying-ge/FigureYa/stargazers" target="_blank">Stats</a>
-    <a href="#contact">Contact</a>
+    <a onclick="showContact()">Contact</a>
   </nav>
 </header>
+
+<!-- Citation Modal -->
+<div class="modal-overlay" id="citationModal">
+  <div class="modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;">Citation</h3>
+      <button class="modal-close" style="margin:0;padding:0;width:30px;height:30px;" onclick="closeModal('citationModal')">✕</button>
+    </div>
+    <div class="copy-container">
+      <div class="text-content">
+        <p style="line-height: 1.8; font-size: 0.95em;" id="citationText">Lu, X., Li, K., Li, Z., Lin, A., Zhao, L., Shen, R., Xu, Z., Gao, J., Lv, D., Zhang, Y., Ye, T., Shen, J., Chen, Y., Huang, H., Hao, Z., Zeng, D., Wang, H., Guo, S., Wang, W., Xiong, Y., Li, Y., Li, H., Gao, J., Liu, Q., Wei, B., Shi, J., Cheng, S., Li, G., Tang, Y., Lin, E., Xu, H., Feng, G., He, Y., Sun, Y., Liu, X., Wang, Y., Song, W., Song, J., Tian, S., Zhang, Y., Zhang, J., Xu, Z., Song, C., Zhang, Y., Wu, H., Gao, C., Hu, E., Yang, C., Lou, J., Wang, D., Wang, X., Luo, P., Yu, G. and Ge, Y. (2025), FigureYa: A Standardized Visualization Framework for Enhancing Biomedical Data Interpretation and Research Efficiency. <i>iMetaMed</i>, 1: e70005. <a href="https://doi.org/10.1002/imm3.70005" target="_blank">https://doi.org/10.1002/imm3.70005</a> (<a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/imm3.70013" target="_blank">Cover Story</a>)</p>
+      </div>
+      <button class="copy-button" onclick='copyToClipboard(document.getElementById("citationText").innerText, this)'>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Copy
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;">Contact</h3>
+      <button class="modal-close" style="margin:0;padding:0;width:30px;height:30px;" onclick="closeModal('contactModal')">✕</button>
+    </div>
+    <div class="copy-container">
+      <div class="text-content">
+        <p style="margin: 0;">WeChat ID: <strong id="wechatId">epigenomics</strong></p>
+      </div>
+      <button class="copy-button" onclick='copyToClipboard(document.getElementById("wechatId").innerText, this)'>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Copy
+      </button>
+    </div>
+  </div>
+</div>
 
 <div class="container">
   <h1 class="page-title">FigureYa: Interactive Results Browser</h1>
@@ -296,20 +484,6 @@
   </div>
 
   <div id="tocGrid" class="grid"></div>
-
-  <!-- Citation Section -->
-  <div id="citation" style="margin-top: 4em; padding: 2em; background: #f9f9f9; border-radius: 8px;">
-    <h2 style="color: #1a202c; margin-bottom: 1em;">Citation</h2>
-    <p style="line-height: 1.8; color: #4a5568;">
-      Lu, X., Li, K., Li, Z., Lin, A., Zhao, L., Shen, R., Xu, Z., Gao, J., Lv, D., Zhang, Y., Ye, T., Shen, J., Chen, Y., Huang, H., Hao, Z., Zeng, D., Wang, H., Guo, S., Wang, W., Xiong, Y., Li, Y., Li, H., Gao, J., Liu, Q., Wei, B., Shi, J., Cheng, S., Li, G., Tang, Y., Lin, E., Xu, H., Feng, G., He, Y., Sun, Y., Liu, X., Wang, Y., Song, W., Song, J., Tian, S., Zhang, Y., Zhang, J., Xu, Z., Song, C., Zhang, Y., Wu, H., Gao, C., Hu, E., Yang, C., Lou, J., Wang, D., Wang, X., Luo, P., Yu, G. and Ge, Y. (2025), FigureYa: A Standardized Visualization Framework for Enhancing Biomedical Data Interpretation and Research Efficiency. <i>iMetaMed</i>, 1: e70005. <a href="https://doi.org/10.1002/imm3.70005" target="_blank" style="color: #3182ce;">https://doi.org/10.1002/imm3.70005</a> (<a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/imm3.70013" target="_blank" style="color: #3182ce;">Cover Story</a>)
-    </p>
-  </div>
-
-  <!-- Contact Section -->
-  <div id="contact" style="margin-top: 2em; padding: 2em; background: #f9f9f9; border-radius: 8px;">
-    <h2 style="color: #1a202c; margin-bottom: 1em;">Contact</h2>
-    <p style="color: #4a5568;">WeChat ID: <strong style="color: #2d3748;">epigenomics</strong></p>
-  </div>
 </div>
 
 <script>
@@ -495,6 +669,9 @@
 
   // Initialize
   document.addEventListener("DOMContentLoaded", function() {
+    // Setup modal overlay click handlers
+    setupModalOverlayClickHandlers();
+
     loadChapters();
 
     // Search box enter key
