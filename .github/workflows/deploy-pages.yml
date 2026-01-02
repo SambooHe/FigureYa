@@ -24,16 +24,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          sparse-checkout: |
-            index.html
-            logo.svg
-            js
-            chapters.json
-            texts
-            gallery_compress
-            categories.txt
-            file_list.json
-          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+
+      - name: Create deployment directory structure
+        run: |
+          mkdir -p deploy
+          cp index.html logo.svg deploy/
+          cp -r js deploy/
+          cp -r texts deploy/
+          cp -r gallery_compress deploy/
+          cp chapters.json deploy/
+          cp categories.txt deploy/
+          cp file_list.json deploy/
+
+          # Copy all FigureYa folders (only HTML files to save space)
+          for dir in FigureYa*/; do
+            foldername=$(basename "$dir")
+            mkdir -p "deploy/$foldername"
+            # Copy only HTML files
+            find "$dir" -maxdepth 1 -name "*.html" -exec cp {} "deploy/$foldername/" \;
+          done
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -41,7 +51,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: 'deploy'
 
       - name: Deploy to GitHub Pages
         id: deployment
