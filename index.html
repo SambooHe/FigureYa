@@ -584,12 +584,15 @@
       overflow-y: auto;
       flex: 1;
     }
-    @media (max-width: 1100px) {
-      .card { flex-basis: 43%; }
+    @media (max-width: 1200px) {
+      .card { flex-basis: calc(33.333% - 22px); }
     }
-    @media (max-width: 700px) {
+    @media (max-width: 900px) {
+      .card { flex-basis: calc(50% - 22px); }
+    }
+    @media (max-width: 600px) {
       .grid { gap: 15px; }
-      .card { flex-basis: 97%; }
+      .card { flex-basis: calc(100% - 22px); }
       .header {
         flex-direction: column;
         gap: 1em;
