@@ -148,19 +148,20 @@
 
       // Render file list with checkboxes
       let html = `
-        <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #e2e8f0;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;">
-            <input type="checkbox" id="selectAllFiles" checked
-                   onchange="toggleAllFiles(this.checked)"
-                   style="width:18px;height:18px;cursor:pointer;">
-            <span>Select All Files (${files.length})</span>
-          </label>
-          <p style="margin:8px 0 0 26px;font-size:0.85em;color:#718096;">
-            Total size: ${formatFileSize(files.reduce((sum, f) => sum + f.size, 0))}
-          </p>
-        </div>
-        <div style="max-height:500px;overflow-y:auto;padding-right:8px;">
-      `;
+        <div style="display:flex;flex-direction:column;height:100%;">
+          <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;">
+              <input type="checkbox" id="selectAllFiles" checked
+                     onchange="toggleAllFiles(this.checked)"
+                     style="width:18px;height:18px;cursor:pointer;">
+              <span>Select All Files (${files.length})</span>
+            </label>
+            <p style="margin:8px 0 0 26px;font-size:0.85em;color:#718096;">
+              Total size: ${formatFileSize(files.reduce((sum, f) => sum + f.size, 0))}
+            </p>
+          </div>
+          <div style="overflow-y:auto;padding-right:8px;flex:1;min-height:0;">
+        `;
 
       files.forEach((file, index) => {
         html += `
@@ -178,22 +179,23 @@
       });
 
       html += `
-        </div>
-        <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;
-                    display:flex;justify-content:space-between;align-items:center;">
-          <a href="https://github.com/ying-ge/FigureYa/tree/main/${folderName}" target="_blank"
-             style="color:#718096;text-decoration:none;font-size:0.9em;">
-            🔗 View on GitHub
-          </a>
-          <div style="display:flex;gap:12px;">
-            <button onclick="closeDownloadModal()"
-                    style="padding:10px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;cursor:pointer;">
-              Cancel
-            </button>
-            <button onclick="downloadSelectedFiles('${folderName}')"
-                    style="padding:10px 24px;background:#3182ce;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;">
-              📦 Download Selected
-            </button>
+          </div>
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;
+                      display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+            <a href="https://github.com/ying-ge/FigureYa/tree/main/${folderName}" target="_blank"
+               style="color:#718096;text-decoration:none;font-size:0.9em;">
+              🔗 View on GitHub
+            </a>
+            <div style="display:flex;gap:12px;">
+              <button onclick="closeDownloadModal()"
+                      style="padding:10px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;cursor:pointer;">
+                Cancel
+              </button>
+              <button onclick="downloadSelectedFiles('${folderName}')"
+                      style="padding:10px 24px;background:#3182ce;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;">
+                📦 Download Selected
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -755,6 +757,7 @@
       display: flex;
       flex-direction: column;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      overflow: hidden;
     }
     .modal-header {
       padding: 20px;
@@ -762,6 +765,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
     .modal-header h2 {
       margin: 0;
@@ -790,6 +794,7 @@
       padding: 20px;
       overflow-y: auto;
       flex: 1;
+      min-height: 0;
     }
     .btn-modal {
       padding: 10px 20px;
