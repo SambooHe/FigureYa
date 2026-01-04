@@ -68,7 +68,7 @@ The R package `glmnet` is used, which is the best R package available for fittin
 source("install_dependencies.R")
 library("glmnet") # lasso regression
 library("survival") # 生存分析 survival analysis
-source("nonzeroCoef.R")
+source("nonzeroCoef.R") # from glmnet package
 Sys.setenv(LANGUAGE = "en") #显示英文报错信息 display English error messages
 options(stringsAsFactors = FALSE) #禁止chr转成factor prohibit the conversion of chr to factor
 ```
