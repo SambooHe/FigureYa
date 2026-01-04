@@ -81,6 +81,15 @@ FigureYa101PCA
 FigureYa38PCA
 
 趋势图之生存分析
+FigureYa31lasso_update
+FigureYa66UnivariateCox
+FigureYa220repeatedLasso
+FigureYa141risk
+FigureYa6rHRsV2
+FigureYa193RiskTable
+FigureYa30nomogram_update
+FigureYa138NiceCalibration
+FigureYa33DCA_update
 FigureYa186swimmerplot
 FigureYa197SmoothHaz
 FigureYa85timeROC
