@@ -6,7 +6,7 @@ FigureYa220repeatedLasso
 Author(s)
 : Xiaofan Lu
 Reviewer(s)
-: Ying Ge,Hui Huang
+: Ying Ge, Hui Huang
 Date
 : 2026-01-05
 1
@@ -386,7 +386,6 @@ pblapply
 (list.of.seed,
 function
 (x){
-# 大概运行2天 # It will run for about 2 days
 set.seed
 (list.of.seed[x])
 cvfit
